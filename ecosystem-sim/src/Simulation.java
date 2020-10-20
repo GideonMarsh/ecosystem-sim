@@ -21,13 +21,8 @@ public class Simulation extends Canvas {
 		frame.pack();
 		frame.setVisible(true);
 		
-		organisms.add(new Organism(1));
-		organisms.add(new Organism(1));
-		organisms.add(new Organism(2));
-		organisms.add(new Organism(2));
-		organisms.add(new Organism(2));
-		organisms.add(new Organism(2));
-		organisms.add(new Organism(2));
+		for (int i = 0; i < 3; i++) {organisms.add(new Organism(1));}
+		for (int i = 0; i < 10; i++) {organisms.add(new Organism(2));}
 
 		try {
 			while (true) {

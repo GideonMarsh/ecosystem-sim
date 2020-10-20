@@ -107,6 +107,14 @@ public class Organism {
 			
 			int xDif = destination.getXPosition() - position.getXPosition();
 			int yDif = destination.getYPosition() - position.getYPosition();
+			
+			/*
+			boolean preferX;
+			
+			if (xDif != 0 && yDif != 0) {
+				preferX = Math.round(Math.random()) == 0;
+			}*/
+			
 			if (Math.abs(xDif) > Math.abs(yDif)) {
 				newPosition.changeXPosition(Integer.signum(xDif));
 			}
@@ -115,11 +123,6 @@ public class Organism {
 			}
 			
 			position = newPosition;
-			/*
-			// if something is in the way, try to step around it
-			if (mentalMap[newPosition.getYPosition()][newPosition.getXPosition()] != 0) {
-				
-			}*/
 			
 			if (position.sameAs(destination)) {
 				destination = null;
