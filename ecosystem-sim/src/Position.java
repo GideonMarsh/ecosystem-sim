@@ -36,4 +36,8 @@ public class Position {
 	public void changeYPosition(int change) {
 		yPosition += change;
 	}
+	
+	public boolean sameAs(Position p) {
+		return (xPosition == p.getXPosition()) && (yPosition == p.getYPosition());
+	}
 }

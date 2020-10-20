@@ -21,11 +21,18 @@ public class Simulation extends Canvas {
 		frame.pack();
 		frame.setVisible(true);
 		
-		organisms.add(new Organism());
+		organisms.add(new Organism(1));
+		organisms.add(new Organism(1));
+		organisms.add(new Organism(2));
+		organisms.add(new Organism(2));
+		organisms.add(new Organism(2));
+		organisms.add(new Organism(2));
+		organisms.add(new Organism(2));
+
 		try {
 			while (true) {
 				for (Organism organism : organisms) {
-					organism.move(new Position(33,22));
+					organism.determineNextAction(organisms);
 				}
 				canvas.repaint();
 				Thread.sleep(100);
@@ -41,13 +48,13 @@ public class Simulation extends Canvas {
 		g.fillRect(0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
 		
 		for (Organism organism : organisms) {
-			drawOrganism(g,organism, new Color(0,100,0));
+			drawOrganism(g,organism);
 		}
 	}
 	
-	private void drawOrganism(Graphics g, Organism o, Color c) {
+	private void drawOrganism(Graphics g, Organism o) {
 		if (o.equals(null)) return;
-		g.setColor(c);
+		g.setColor(o.getColor());
 		g.fillRect(o.getPosition().getXPosition() * 10, o.getPosition().getYPosition() * 10, 10, 10);
 	}
 }
