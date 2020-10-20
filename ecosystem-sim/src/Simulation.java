@@ -11,18 +11,29 @@ public class Simulation extends Canvas {
 	private static final int WINDOW_HEIGHT = 400;
 
 	private static ArrayList<Organism> organisms = new ArrayList<Organism>();
-	
-	private static Canvas canvas;
 
 	public static void main(String[] args) {
 		JFrame frame = new JFrame("Ecosystem");
-		canvas = new Simulation();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		Canvas canvas = new Simulation();
 		canvas.setSize(WINDOW_WIDTH,WINDOW_HEIGHT);
 		frame.add(canvas);
 		frame.pack();
 		frame.setVisible(true);
 		
 		organisms.add(new Organism());
+		try {
+			while (true) {
+				for (Organism organism : organisms) {
+					organism.move(new Position(33,22));
+				}
+				canvas.repaint();
+				Thread.sleep(100);
+			}
+		}
+		catch (InterruptedException e) {
+			System.out.println("Simulation interrupted");
+		}
 	}
 	
 	public void paint(Graphics g) {
@@ -30,8 +41,6 @@ public class Simulation extends Canvas {
 		g.fillRect(0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
 		
 		for (Organism organism : organisms) {
-			organism.move(new Position(33,22));
-			
 			drawOrganism(g,organism, new Color(0,100,0));
 		}
 	}
