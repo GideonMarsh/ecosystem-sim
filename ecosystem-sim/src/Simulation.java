@@ -13,6 +13,8 @@ public class Simulation {
 	private static final int WINDOW_WIDTH = 400;
 	private static final int WINDOW_HEIGHT = 400;
 	
+	private static final int SIMULATION_TICK = 100;
+	
 	public static Environment environment;
 
 	public static void main(String[] args) {
@@ -29,7 +31,12 @@ public class Simulation {
 		environment = new Environment(WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
 		environment.generateGroundTypes();
 		
-		environment.addOrganism(new Organism(2), new Position(33,22));
+		for (int i = 0; i < 5; i++) {
+			environment.addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39)));
+		}
+		for (int i = 0; i < 3; i++) {
+			environment.addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39)));
+		}
 		/////End of initial environment conditions///// 
 		
 		JFrame f = new JFrame("Ecosystem");
@@ -40,7 +47,7 @@ public class Simulation {
         
         RepaintTask rt = new RepaintTask(environment,f);
         Timer t = new Timer();
-        t.schedule(rt, 500, 300);
+        t.schedule(rt, 500, SIMULATION_TICK);
 	}
 }
 

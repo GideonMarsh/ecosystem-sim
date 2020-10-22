@@ -102,6 +102,7 @@ public class Environment {
 		if (o.isAPlant()) layer = 1;
 		else layer = 2;
 		
+		if (p.xPosition >= EnvXSize || p.yPosition >= EnvYSize || p.xPosition < 0 || p.yPosition < 0) return false;
 		if (environment[p.yPosition][p.xPosition].isOccupied(layer)) return false;
 		environment[p.yPosition][p.xPosition].setOccupant(o);
 		o.setPosition(p);
@@ -114,6 +115,7 @@ public class Environment {
 		if (o.isAPlant()) layer = 1;
 		else layer = 2;
 		
+		if (p.xPosition >= EnvXSize || p.yPosition >= EnvYSize || p.xPosition < 0 || p.yPosition < 0) return false;
 		if (environment[p.yPosition][p.xPosition].isOccupied(layer)) return false;
 		environment[p.yPosition][p.xPosition].setOccupant(o);
 		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(layer);

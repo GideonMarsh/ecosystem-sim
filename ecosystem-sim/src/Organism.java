@@ -5,11 +5,11 @@ public class Organism {
 	private Position position;
 	private int walkingSpeed;
 	
-	private Position destination;
-	private Organism destinationObject;
-	
 	private int organismType;
 	private boolean isAPlant;
+	
+	private int hp;
+	private int maxhp;
 	
 	private Color color;
 	
@@ -42,6 +42,7 @@ public class Organism {
 		}
 		else {
 			color = new Color(0,100,0);
+			isAPlant = true;
 		}
 	}
 	
@@ -66,34 +67,82 @@ public class Organism {
 	}
 	
 	// The AI that determines and executes Organism behavior
+	// Behavior is split up among helper methods
 	public void nextAction(Environment environment) {
 		perceive(environment);
+		move(environment);
 		
+	}
+	
+	private void move(Environment environment) {
 		switch (organismType) {
 		case 1:
-			if (mentalMap == null) return;
+			if (mentalMap == null || walkingSpeed == 0) return;
 			
-			/*
-			if (destination != null && destinationObject != null && (mentalMap[destination.yPosition][destination.xPosition] == null || ! mentalMap[destination.yPosition][destination.xPosition].equals(destinationObject))) {
-				destination = null;
-				destinationObject = null;
-			}
-			for (int i = 0; i < 40; i++) {
-				for (int j = 0; j < 40; j++) {
-					if (mentalMap[i][j] != null && mentalMap[i][j].getOrganismType() == 2) {
-						if (destination == null || Math.abs(i - position.yPosition) + Math.abs(j - position.xPosition) < Math.abs(destination.xPosition - position.xPosition) + Math.abs(destination.yPosition - position.yPosition)) {
-							destination = new Position(j,i);
-							destinationObject = mentalMap[i][j];
-						}
-					}
+			Position destination = null;
+			for (Organism organism : mentalMap) {
+				if (organism.getOrganismType() == 2) {
+					destination = position.closest(destination,organism.getPosition());
 				}
 			}
-			*/
+			
+			if (destination == null) return;
+			
+			/*
+			 * Organisms move cardinally one square at a time towards their destinations
+			 * Their moves are chosen sequentially from the chosenMoves array
+			 * If no valid moves are found, organism remains stationary
+			 * If the organism is alinged with its destination on one axis, it will first try
+			 * to move directly towards its destination, and if it fails it will attempt to
+			 * move to the side.
+			 * If the organism is not aligned with its destination on an axis, it will first
+			 * randomly choose which axis to move along and then try to move along that axis
+			 * first and the other axis second; if neither work, then it tries the opposite
+			 * direction on the non-chosen axis
+			 */
+			int xDif, yDif, rand;
+			Position[] chosenMoves = new Position[3];
+			
+			rand = Math.round(Math.random()) == 0 ? 1 : -1;
+			
+			for (int i = 0; i < walkingSpeed; i++) {
+				if (position.sameAs(destination)) break;
+				
+				xDif = destination.xPosition - position.xPosition;
+				yDif = destination.yPosition - position.yPosition;
+				
+				if (xDif == 0) {
+					chosenMoves[0] = new Position(position.xPosition, position.yPosition + Integer.signum(yDif));
+					chosenMoves[1] = new Position(position.xPosition + rand, position.yPosition);
+					chosenMoves[2] = new Position(position.xPosition - rand, position.yPosition);
+				}
+				if (yDif == 0) {
+					chosenMoves[0] = new Position(position.xPosition + Integer.signum(xDif), position.yPosition);
+					chosenMoves[1] = new Position(position.xPosition, position.yPosition + rand);
+					chosenMoves[2] = new Position(position.xPosition, position.yPosition - rand);
+				}
+				if (xDif != 0 && yDif != 0) {
+					if (rand == 1) {
+						chosenMoves[0] = new Position(position.xPosition, position.yPosition + Integer.signum(yDif));
+						chosenMoves[1] = new Position(position.xPosition + Integer.signum(xDif), position.yPosition);
+						chosenMoves[2] = new Position(position.xPosition - Integer.signum(xDif), position.yPosition);
+					}
+					else {
+						chosenMoves[0] = new Position(position.xPosition + Integer.signum(xDif), position.yPosition);
+						chosenMoves[1] = new Position(position.xPosition, position.yPosition + Integer.signum(yDif));
+						chosenMoves[2] = new Position(position.xPosition, position.yPosition - Integer.signum(yDif));
+					}
+				}
+				
+				for (int j = 0; j < chosenMoves.length; j++) {
+					if (environment.moveOrganism(this, chosenMoves[j])) break;
+				}
+			}
 			break;
 		case 2:
 			if (mentalMap == null) return;
 			for (Organism organism : mentalMap) {
-				if (/*! organism.equals(this) && */organism.getPosition().sameAs(position)) {
+				if (! organism.equals(this) && organism.getPosition().sameAs(position)) {
 					Position newPosition;
 					do {
 						newPosition = new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39));
@@ -101,42 +150,6 @@ public class Organism {
 					while (! environment.moveOrganism(this, newPosition));
 					break;
 				}
-			}
-		}
-	}
-	
-	// Moves the organism towards its destination position as directly as possible
-	// Number of squares moved determined by speed
-	private void move() {
-		if (destination == null || walkingSpeed == 0) return;
-		
-		// repeat a number of times equal to walking speed
-		for (int i = 0; i < walkingSpeed; i++) {
-			Position newPosition = new Position(position.xPosition, position.yPosition);
-			
-			int xDif = destination.xPosition - position.xPosition;
-			int yDif = destination.yPosition - position.yPosition;
-			
-			/*
-			boolean preferX;
-			
-			if (xDif != 0 && yDif != 0) {
-				preferX = Math.round(Math.random()) == 0;
-			}*/
-			
-			if (Math.abs(xDif) > Math.abs(yDif)) {
-				newPosition.xPosition += (Integer.signum(xDif));
-			}
-			else {
-				newPosition.yPosition += (Integer.signum(yDif));
-			}
-			
-			position = newPosition;
-			
-			if (position.sameAs(destination)) {
-				destination = null;
-				destinationObject = null;
-				return;
 			}
 		}
 	}
