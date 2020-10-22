@@ -1,7 +1,11 @@
+import java.awt.Color;
+import java.util.ArrayList;
 
 public class Environment {
 	
 	private class Tile {
+		private final Color[] groundColors = {Color.white, new Color(200,255,200), new Color(200,200,255)};
+		
 		private int groundType;
 		private Organism plantLayer;
 		private Organism animalLayer;
@@ -14,39 +18,126 @@ public class Environment {
 			groundType = newType;
 		}
 		
-		// returns true if successful and false if tile is currently occupied
-		public boolean setPlantLayer(Organism newOccupant) {
-			if (plantLayer != null) return false;
-			plantLayer = newOccupant;
-			return true;
+		public int getGroundType() {
+			return groundType;
 		}
 		
-		// returns true if successful and false if tile is currently occupied
-		public boolean setAnimalLayer(Organism newOccupant) {
-			if (animalLayer != null) return false;
-			animalLayer = newOccupant;
-			return true;
+		public Organism getOccupant(int layer) {
+			switch (layer) {
+			case 1: return plantLayer;
+			case 2: return animalLayer;
+			}
+			return null;
 		}
 		
-		public void clearPlantLayer() {
-			plantLayer = null;
+		// returns true if successful and false if tile is currently occupied by same organism type
+		public boolean setOccupant(Organism newOccupant) {
+			if (newOccupant.isAPlant()) {
+				if (plantLayer != null) return false;
+				plantLayer = newOccupant;
+				return true;
+			}
+			else {
+				if (animalLayer != null) return false;
+				animalLayer = newOccupant;
+				return true;
+			}
+			
 		}
 		
-		public void clearAnimalLayer() {
-			animalLayer = null;
+		public void removeOccupant(int layer) {
+			switch (layer) {
+			case 1: plantLayer = null;
+			case 2: animalLayer = null;
+			}
+		}
+		
+		public boolean isOccupied(int layer) {
+			switch (layer) {
+			case 1: return plantLayer != null;
+			case 2: return animalLayer != null;
+			}
+			return false;
+		}
+		
+		public Color getTileColor() {
+			if (animalLayer != null) return animalLayer.getColor();
+			if (plantLayer != null) return plantLayer.getColor();
+			return groundColors[groundType];
 		}
 	}
 	
-	private Tile[][] environment;
+	private int EnvXSize;
+	private int EnvYSize;
 	
-	public Environment(int size) {
-		environment = new Tile[size][size];
-		for (int i = 0; i < size; i++) {
-			for (int j = 0; j < size; j++) {
+	private Tile[][] environment;
+	private ArrayList<Organism> organisms;
+	
+	public Environment(int xSize, int ySize) {
+		environment = new Tile[ySize][xSize];
+		for (int i = 0; i < ySize; i++) {
+			for (int j = 0; j < xSize; j++) {
 				environment[i][j] = new Tile(1);
+			}
+		}
+		organisms = new ArrayList<Organism>();
+		EnvXSize = xSize;
+		EnvYSize = ySize;
+	}
+	
+	public void generateGroundTypes() {
+		for (int i = 0; i < environment.length; i++) {
+			for (int j = 0; j < environment[i].length; j++) {
+				if (i - j > 18) environment[i][j].setGroundType(2);
 			}
 		}
 	}
 	
+	public ArrayList<Organism> getOrganisms() {
+		return organisms;
+	}
 	
+	public boolean addOrganism(Organism o, Position p) {
+		int layer;
+		if (o.isAPlant()) layer = 1;
+		else layer = 2;
+		
+		if (environment[p.yPosition][p.xPosition].isOccupied(layer)) return false;
+		environment[p.yPosition][p.xPosition].setOccupant(o);
+		o.setPosition(p);
+		organisms.add(o);
+		return true;
+	}
+	
+	public boolean moveOrganism(Organism o, Position p) {
+		int layer;
+		if (o.isAPlant()) layer = 1;
+		else layer = 2;
+		
+		if (environment[p.yPosition][p.xPosition].isOccupied(layer)) return false;
+		environment[p.yPosition][p.xPosition].setOccupant(o);
+		o.setPosition(p);
+		return true;
+	}
+	
+	public ArrayList<Organism> resolvePerception(Organism o) {
+		return null;
+	}
+	
+	public void progressTime() {
+		for (Organism organism : organisms) {
+			organism.nextAction(this);
+		}
+	}
+	
+	// returns a 2D array of colors for drawing
+	public Color[][] getColors() {
+		Color[][] colorArray = new Color[EnvYSize][EnvXSize];
+		for (int i = 0; i < EnvYSize; i++) {
+			for (int j = 0; j < EnvXSize; j++) {
+				colorArray[i][j] = environment[i][j].getTileColor();
+			}
+		}
+		return colorArray;
+	}
 }

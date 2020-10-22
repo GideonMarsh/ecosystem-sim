@@ -13,15 +13,13 @@ public class Organism {
 	
 	private Color color;
 	
-	// a basic representation of the organism's surroundings
-	// outer array index is y position, inner array index is x position
-	private Organism[][] mentalMap;
+	private ArrayList<Organism> mentalMap;
 	
 	// Creating an organism from nothing
 	public Organism() {
 		position = new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39));
 		walkingSpeed = 1;
-		mentalMap = new Organism[40][40];
+		mentalMap = new ArrayList<Organism>();
 		organismType = 1;
 		isAPlant = false;
 		color = new Color(0,100,0);
@@ -36,7 +34,7 @@ public class Organism {
 	public Organism(int type) {
 		position = new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39));
 		walkingSpeed = 1;
-		mentalMap = new Organism[40][40];
+		mentalMap = new ArrayList<Organism>();
 		organismType = type;
 		isAPlant = false;
 		if (type == 1) {
@@ -55,6 +53,10 @@ public class Organism {
 		return position;
 	}
 	
+	public void setPosition(Position newPosition){;
+		position = newPosition;
+	}
+	
 	public boolean isAPlant() {
 		return isAPlant;
 	}
@@ -63,37 +65,44 @@ public class Organism {
 		return organismType;
 	}
 	
-	// The AI that determines Organism behavior
-	public void determineNextAction(ArrayList<Organism> organisms) {
-		perceive(organisms);
+	// The AI that determines and executes Organism behavior
+	public void nextAction(Environment environment) {
+		perceive(environment);
 		
 		switch (organismType) {
 		case 1:
+			if (mentalMap == null) return;
 			
-			if (destination != null && destinationObject != null && (mentalMap[destination.getYPosition()][destination.getXPosition()] == null || ! mentalMap[destination.getYPosition()][destination.getXPosition()].equals(destinationObject))) {
+			/*
+			if (destination != null && destinationObject != null && (mentalMap[destination.yPosition][destination.xPosition] == null || ! mentalMap[destination.yPosition][destination.xPosition].equals(destinationObject))) {
 				destination = null;
 				destinationObject = null;
 			}
 			for (int i = 0; i < 40; i++) {
 				for (int j = 0; j < 40; j++) {
 					if (mentalMap[i][j] != null && mentalMap[i][j].getOrganismType() == 2) {
-						if (destination == null || Math.abs(i - position.getYPosition()) + Math.abs(j - position.getXPosition()) < Math.abs(destination.getXPosition() - position.getXPosition()) + Math.abs(destination.getYPosition() - position.getYPosition())) {
+						if (destination == null || Math.abs(i - position.yPosition) + Math.abs(j - position.xPosition) < Math.abs(destination.xPosition - position.xPosition) + Math.abs(destination.yPosition - position.yPosition)) {
 							destination = new Position(j,i);
 							destinationObject = mentalMap[i][j];
 						}
 					}
 				}
 			}
+			*/
 			break;
 		case 2:
-			if (mentalMap[position.getYPosition()][position.getXPosition()] != null) {
-				position.setXPosition((int) Math.round(Math.random() * 39));
-				position.setYPosition((int) Math.round(Math.random() * 39));
+			if (mentalMap == null) return;
+			for (Organism organism : mentalMap) {
+				if (organism.getPosition().sameAs(position)) {
+					Position newPosition;
+					do {
+						newPosition = new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39));
+					}
+					while (! environment.moveOrganism(this, newPosition));
+					break;
+				}
 			}
-			break;
 		}
-		
-		move();
 	}
 	
 	// Moves the organism towards its destination position as directly as possible
@@ -103,10 +112,10 @@ public class Organism {
 		
 		// repeat a number of times equal to walking speed
 		for (int i = 0; i < walkingSpeed; i++) {
-			Position newPosition = new Position(position.getXPosition(), position.getYPosition());
+			Position newPosition = new Position(position.xPosition, position.yPosition);
 			
-			int xDif = destination.getXPosition() - position.getXPosition();
-			int yDif = destination.getYPosition() - position.getYPosition();
+			int xDif = destination.xPosition - position.xPosition;
+			int yDif = destination.yPosition - position.yPosition;
 			
 			/*
 			boolean preferX;
@@ -116,10 +125,10 @@ public class Organism {
 			}*/
 			
 			if (Math.abs(xDif) > Math.abs(yDif)) {
-				newPosition.changeXPosition(Integer.signum(xDif));
+				newPosition.xPosition += (Integer.signum(xDif));
 			}
 			else {
-				newPosition.changeYPosition(Integer.signum(yDif));
+				newPosition.yPosition += (Integer.signum(yDif));
 			}
 			
 			position = newPosition;
@@ -133,12 +142,7 @@ public class Organism {
 	}
 	
 	// updates the mental map of the organism
-	private void perceive(ArrayList<Organism> organisms) {
-		mentalMap = new Organism[40][40];
-		for (Organism organism : organisms) {
-			if (! organism.equals(this)) {
-				mentalMap[organism.getPosition().getYPosition()][organism.getPosition().getXPosition()] = organism;
-			}
-		}
+	private void perceive(Environment environment) {
+		mentalMap = environment.resolvePerception(this);
 	}
 }

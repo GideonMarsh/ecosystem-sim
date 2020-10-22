@@ -1,7 +1,7 @@
 
 public class Position {
-	private int xPosition;
-	private int yPosition;
+	public int xPosition;
+	public int yPosition;
 	
 	public Position() {
 		xPosition = 0;
@@ -13,31 +13,7 @@ public class Position {
 		yPosition = y;
 	}
 	
-	public void setXPosition(int newXPos) {
-		xPosition = newXPos;
-	}
-	
-	public void setYPosition(int newYPos) {
-		yPosition = newYPos;
-	}
-	
-	public int getXPosition() {
-		return xPosition;
-	}
-	
-	public int getYPosition() {
-		return yPosition;
-	}
-	
-	public void changeXPosition(int change) {
-		xPosition += change;
-	}
-	
-	public void changeYPosition(int change) {
-		yPosition += change;
-	}
-	
 	public boolean sameAs(Position p) {
-		return (xPosition == p.getXPosition()) && (yPosition == p.getYPosition());
+		return (xPosition == p.xPosition) && (yPosition == p.yPosition);
 	}
 }
