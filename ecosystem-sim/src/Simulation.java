@@ -1,49 +1,68 @@
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics;
-import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import javax.swing.SwingUtilities;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import java.awt.Dimension;
 
-public class Simulation extends Canvas {
-	
+public class Simulation {
 	private static final int WINDOW_WIDTH = 400;
 	private static final int WINDOW_HEIGHT = 400;
-
-	private static Environment environment;
+	
+	public static Environment environment;
 
 	public static void main(String[] args) {
-		JFrame frame = new JFrame("Ecosystem");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		Canvas canvas = new Simulation();
-		canvas.setSize(WINDOW_WIDTH,WINDOW_HEIGHT);
-		frame.add(canvas);
-		frame.pack();
-		frame.setVisible(true);
 		
+		SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                createAndShowGUI();
+            }
+        });	
+	}
+	
+	private static void createAndShowGUI() {
+		////////Initial environment conditions////////
 		environment = new Environment(WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
 		environment.generateGroundTypes();
 		
-		/*
-		for (int i = 0; i < 3; i++) {organisms.add(new Organism(1));}
-		for (int i = 0; i < 10; i++) {organisms.add(new Organism(2));}
-		*/
-		
 		environment.addOrganism(new Organism(2), new Position(33,22));
+		/////End of initial environment conditions///// 
+		
+		JFrame f = new JFrame("Ecosystem");
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.add(new EnvironmentPanel(environment, WINDOW_WIDTH, WINDOW_HEIGHT));
+        f.pack();
+        f.setVisible(true);
+        
+        RepaintTask rt = new RepaintTask(environment,f);
+        Timer t = new Timer();
+        t.schedule(rt, 500, 300);
+	}
+}
 
-		try {
-			while (true) {
-				environment.progressTime();
-				canvas.repaint();
-				Thread.sleep(300);
-			}
-		}
-		catch (InterruptedException e) {
-			System.out.println("Simulation interrupted");
-		}
+class EnvironmentPanel extends JPanel {
+	
+	private Environment environment;
+	private int windowWidth;
+	private int windowHeight;
+	
+	public EnvironmentPanel(Environment e, int width, int height) {
+		environment = e;
+		windowWidth = width;
+		windowHeight = height;
 	}
 	
-	public void paint(Graphics g) {
+	public Dimension getPreferredSize() {
+		return new Dimension(windowWidth,windowHeight);
+	}
+	
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		
 		Color[][] colorArray = environment.getColors();
 		
 		for (int i = 0; i < colorArray.length; i++) {
@@ -53,4 +72,21 @@ public class Simulation extends Canvas {
 			}
 		}
 	}
+}
+
+class RepaintTask extends TimerTask {
+	
+	private Environment env;
+	private JFrame jf;
+
+	public RepaintTask(Environment e, JFrame f) {
+		env = e;
+		jf = f;
+	}
+	
+	public void run() {
+		env.progressTime();
+		jf.repaint();
+	}
+	
 }

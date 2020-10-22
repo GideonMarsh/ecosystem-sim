@@ -116,12 +116,13 @@ public class Environment {
 		
 		if (environment[p.yPosition][p.xPosition].isOccupied(layer)) return false;
 		environment[p.yPosition][p.xPosition].setOccupant(o);
+		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(layer);
 		o.setPosition(p);
 		return true;
 	}
 	
 	public ArrayList<Organism> resolvePerception(Organism o) {
-		return null;
+		return organisms;
 	}
 	
 	public void progressTime() {

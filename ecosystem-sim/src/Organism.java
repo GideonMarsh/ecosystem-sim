@@ -93,7 +93,7 @@ public class Organism {
 		case 2:
 			if (mentalMap == null) return;
 			for (Organism organism : mentalMap) {
-				if (organism.getPosition().sameAs(position)) {
+				if (/*! organism.equals(this) && */organism.getPosition().sameAs(position)) {
 					Position newPosition;
 					do {
 						newPosition = new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39));
