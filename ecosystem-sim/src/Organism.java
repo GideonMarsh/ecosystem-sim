@@ -7,9 +7,16 @@ public class Organism {
 	
 	private int organismType;
 	private boolean isAPlant;
+	private boolean isACorpse;
+	
+	private int nutrition;
 	
 	private int hp;
 	private int maxhp;
+	private int maxhpThreshold;		// maximum total hp when an adult
+	
+	private double age;
+	private int maxAge;
 	
 	private Color color;
 	
@@ -17,12 +24,17 @@ public class Organism {
 	
 	// Creating an organism from nothing
 	public Organism() {
-		position = new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39));
+		position = new Position(0,0);
 		walkingSpeed = 1;
 		mentalMap = new ArrayList<Organism>();
-		organismType = 1;
+		organismType = 2;
 		isAPlant = false;
 		color = new Color(0,100,0);
+		age = 0;
+		maxAge = 20;
+		maxhpThreshold = 100;
+		maxhp = 50;
+		hp = 50;
 	}
 	
 	// New organisms are created from parent(s) parameters (genes)
@@ -32,18 +44,29 @@ public class Organism {
 	
 	// Creates a new organism of the specified type
 	public Organism(int type) {
-		position = new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39));
+		position = new Position(0,0);
 		walkingSpeed = 1;
 		mentalMap = new ArrayList<Organism>();
 		organismType = type;
 		isAPlant = false;
+		color = new Color(0,0,100);
+		age = 0;
+		maxAge = 20;
+		maxhpThreshold = 100;
+		maxhp = 50;
+		hp = 50;
 		if (type == 1) {
-			color = new Color(0,0,100);
-		}
-		else {
 			color = new Color(0,100,0);
 			isAPlant = true;
 		}
+	}
+	
+	public int getOrganismType() {
+		return organismType;
+	}
+	
+	public void setOrganismType(int newType) {
+		organismType = newType;
 	}
 	
 	public Color getColor() {
@@ -62,26 +85,22 @@ public class Organism {
 		return isAPlant;
 	}
 	
-	public int getOrganismType() {
-		return organismType;
-	}
-	
 	// The AI that determines and executes Organism behavior
 	// Behavior is split up among helper methods
-	public void nextAction(Environment environment) {
-		perceive(environment);
-		move(environment);
+	public void nextAction() {
+		growOlder();
+		perceive();
+		move();
 		
 	}
 	
-	private void move(Environment environment) {
-		switch (organismType) {
-		case 1:
+	private void move() {
+		if (! isAPlant) {
 			if (mentalMap == null || walkingSpeed == 0) return;
 			
 			Position destination = null;
 			for (Organism organism : mentalMap) {
-				if (organism.getOrganismType() == 2) {
+				if (organism.getOrganismType() == 1) {
 					destination = position.closest(destination,organism.getPosition());
 				}
 			}
@@ -135,27 +154,51 @@ public class Organism {
 				}
 				
 				for (int j = 0; j < chosenMoves.length; j++) {
-					if (environment.moveOrganism(this, chosenMoves[j])) break;
+					if (Environment.getEnvironment().moveOrganism(this, chosenMoves[j])) break;
 				}
 			}
-			break;
-		case 2:
+		}
+		else {
 			if (mentalMap == null) return;
 			for (Organism organism : mentalMap) {
 				if (! organism.equals(this) && organism.getPosition().sameAs(position)) {
 					Position newPosition;
 					do {
-						newPosition = new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39));
+						newPosition = new Position((int) Math.round(Math.random() * 49),(int) Math.round(Math.random() * 49));
 					}
-					while (! environment.moveOrganism(this, newPosition));
+					while (! Environment.getEnvironment().moveOrganism(this, newPosition));
 					break;
 				}
 			}
 		}
 	}
 	
+	private void die() {
+		if (isAPlant || isACorpse) Environment.getEnvironment().removeOrganism(this);
+		isACorpse = true;
+		hp = maxhp;
+		System.out.println("dead");
+	}
+	
+	private void growOlder() {
+		System.out.println(age);
+		age += 1.0 / Environment.YEAR_LENGTH;
+		
+		if (age % 1 == 0) {
+			if (age >= maxAge) this.die();
+			if (age < maxAge / 5) {
+				maxhp = (int) Math.round((maxhpThreshold / 2.0) + (maxhpThreshold / 2.0) * (age / (maxAge / 5)));
+			}
+			if (age == maxAge / 5) maxhp = maxhpThreshold;
+			if (age > maxAge * (4/5)) {
+				maxhp = (int) Math.round((maxhpThreshold / 2.0) + (maxhpThreshold / 2.0) * ((maxAge - age) / (maxAge * 4 / 5)));
+			}
+			System.out.println("MaxHP: " + maxhp);
+		}
+	}
+	
 	// updates the mental map of the organism
-	private void perceive(Environment environment) {
-		mentalMap = environment.resolvePerception(this);
+	private void perceive() {
+		mentalMap = Environment.getEnvironment().resolvePerception(this);
 	}
 }

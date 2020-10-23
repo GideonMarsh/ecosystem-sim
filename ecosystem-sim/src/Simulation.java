@@ -1,6 +1,8 @@
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -10,12 +12,10 @@ import javax.swing.JPanel;
 import java.awt.Dimension;
 
 public class Simulation {
-	private static final int WINDOW_WIDTH = 400;
-	private static final int WINDOW_HEIGHT = 400;
+	private static final int WINDOW_WIDTH = 500;
+	private static final int WINDOW_HEIGHT = 500;
 	
 	private static final int SIMULATION_TICK = 100;
-	
-	public static Environment environment;
 
 	public static void main(String[] args) {
 		
@@ -28,24 +28,24 @@ public class Simulation {
 	
 	private static void createAndShowGUI() {
 		////////Initial environment conditions////////
-		environment = new Environment(WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
-		environment.generateGroundTypes();
+		Environment.makeEnvironment(WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
+		Environment.getEnvironment().generateGroundTypes();
 		
-		for (int i = 0; i < 5; i++) {
-			environment.addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39)));
+		for (int i = 0; i < 1; i++) {
+			Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * ((WINDOW_WIDTH / 10) - 1)),(int) Math.round(Math.random() * ((WINDOW_HEIGHT / 10) - 1))));
 		}
-		for (int i = 0; i < 3; i++) {
-			environment.addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * 39),(int) Math.round(Math.random() * 39)));
+		for (int i = 0; i < 1; i++) {
+			Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * ((WINDOW_WIDTH / 10) - 1)),(int) Math.round(Math.random() * ((WINDOW_HEIGHT / 10) - 1))));
 		}
 		/////End of initial environment conditions///// 
 		
 		JFrame f = new JFrame("Ecosystem");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.add(new EnvironmentPanel(environment, WINDOW_WIDTH, WINDOW_HEIGHT));
+        f.add(new EnvironmentPanel(Environment.getEnvironment(), WINDOW_WIDTH, WINDOW_HEIGHT));
         f.pack();
         f.setVisible(true);
         
-        RepaintTask rt = new RepaintTask(environment,f);
+        RepaintTask rt = new RepaintTask(Environment.getEnvironment(),f);
         Timer t = new Timer();
         t.schedule(rt, 500, SIMULATION_TICK);
 	}
@@ -61,6 +61,15 @@ class EnvironmentPanel extends JPanel {
 		environment = e;
 		windowWidth = width;
 		windowHeight = height;
+		
+		/*
+		addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                environment.progressTime();
+                jf.repaint();
+            }
+        });
+        */
 	}
 	
 	public Dimension getPreferredSize() {

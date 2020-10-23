@@ -1,7 +1,14 @@
+/*
+ * Environment class follows Singleton design pattern - only one instance of
+ * environment can exist, and it can only be referred to using getter method
+ */
 import java.awt.Color;
 import java.util.ArrayList;
 
 public class Environment {
+	
+	public static final int YEAR_LENGTH = 20;	// number of ticks in a year
+	private static Environment e;
 	
 	private class Tile {
 		private final Color[] groundColors = {Color.white, new Color(200,255,200), new Color(200,200,255)};
@@ -48,7 +55,9 @@ public class Environment {
 		public void removeOccupant(int layer) {
 			switch (layer) {
 			case 1: plantLayer = null;
+				break;
 			case 2: animalLayer = null;
+				break;
 			}
 		}
 		
@@ -73,7 +82,15 @@ public class Environment {
 	private Tile[][] environment;
 	private ArrayList<Organism> organisms;
 	
-	public Environment(int xSize, int ySize) {
+	public static void makeEnvironment(int xSize, int ySize) {
+		e = new Environment(xSize, ySize);
+	}
+	
+	public static Environment getEnvironment() {
+		return e;
+	}
+	
+	private Environment(int xSize, int ySize) {
 		environment = new Tile[ySize][xSize];
 		for (int i = 0; i < ySize; i++) {
 			for (int j = 0; j < xSize; j++) {
@@ -123,13 +140,23 @@ public class Environment {
 		return true;
 	}
 	
+	public void removeOrganism(Organism o) {
+		int layer;
+		if (o.isAPlant()) layer = 1;
+		else layer = 2;
+		
+		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(layer);
+		organisms.remove(o);
+		
+	}
+	
 	public ArrayList<Organism> resolvePerception(Organism o) {
 		return organisms;
 	}
 	
 	public void progressTime() {
 		for (Organism organism : organisms) {
-			organism.nextAction(this);
+			organism.nextAction();
 		}
 	}
 	
