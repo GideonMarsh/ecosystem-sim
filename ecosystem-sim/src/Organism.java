@@ -8,6 +8,7 @@ public class Organism {
 	private int organismType;
 	private boolean isAPlant;
 	private boolean isACorpse;
+	private boolean isMarkedForRemoval;
 	
 	private int nutrition;
 	
@@ -15,7 +16,7 @@ public class Organism {
 	private int maxhp;
 	private int maxhpThreshold;		// maximum total hp when an adult
 	
-	private int age;
+	private double age;
 	private int maxAge;
 	
 	private Color color;
@@ -49,14 +50,13 @@ public class Organism {
 		mentalMap = new ArrayList<Organism>();
 		organismType = type;
 		isAPlant = false;
-		color = new Color(0,0,100);
+		color = new Color(0,0,200);
 		age = 0;
 		maxAge = 20;
 		maxhpThreshold = 100;
 		maxhp = 50;
 		hp = 50;
 		if (type == 1) {
-			maxAge = 10;
 			color = new Color(0,100,0);
 			isAPlant = true;
 		}
@@ -84,6 +84,10 @@ public class Organism {
 	
 	public boolean isAPlant() {
 		return isAPlant;
+	}
+	
+	public boolean isMarkedForRemoval() {
+		return isMarkedForRemoval;
 	}
 	
 	// The AI that determines and executes Organism behavior
@@ -177,29 +181,31 @@ public class Organism {
 	
 	private void die() {
 		if (isAPlant || isACorpse) {
-			Environment.getEnvironment().removeOrganism(this);
+			isMarkedForRemoval = true;
 		}
 		else {
 			isACorpse = true;
 			hp = maxhp;
+			color = Color.black;
 		}
 	}
 	
 	private void growOlder() {
-		System.out.println("Age: " + age);
-		age += 1;
+		age  = ((age * Environment.YEAR_LENGTH) + 1) / Environment.YEAR_LENGTH;
 		
-		if (true) {
-			if (age >= maxAge) {
-				this.die();
-				return;
+		if (! isACorpse && age > maxAge) {
+			this.die();
+			return;
+		}
+		if (age < maxAge / 5) {
+			maxhp = (int) Math.round((maxhpThreshold / 2.0) + (maxhpThreshold / 2.0) * (age / (maxAge / 5.0)));
+		}
+		else {
+			if (age >= maxAge * (4.0/5.0)) {
+				maxhp = (int) Math.round((maxhpThreshold / 2.0) + (maxhpThreshold / 2.0) * ((maxAge - age) / (maxAge / 5.0)));
 			}
-			if (age < maxAge / 5) {
-				maxhp = (int) Math.round((maxhpThreshold / 2.0) + (maxhpThreshold / 2.0) * (age / (maxAge / 5)));
-			}
-			if (age == maxAge / 5) maxhp = maxhpThreshold;
-			if (age > maxAge * (4/5)) {
-				maxhp = (int) Math.round((maxhpThreshold / 2.0) + (maxhpThreshold / 2.0) * ((maxAge - age) / (maxAge * 4 / 5)));
+			else {
+				maxhp = maxhpThreshold;
 			}
 		}
 	}

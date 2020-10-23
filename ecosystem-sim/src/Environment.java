@@ -4,6 +4,7 @@
  */
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Environment {
 	
@@ -140,13 +141,13 @@ public class Environment {
 		return true;
 	}
 	
-	public void removeOrganism(Organism o) {
+	// remove method is private to avoid ConcurrentModificationException
+	private void removeOrganism(Organism o) {
 		int layer;
 		if (o.isAPlant()) layer = 1;
 		else layer = 2;
 		
 		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(layer);
-		organisms.remove(o);
 	}
 	
 	public ArrayList<Organism> resolvePerception(Organism o) {
@@ -154,8 +155,17 @@ public class Environment {
 	}
 	
 	public void progressTime() {
-		for (Organism organism : organisms) {
+		/*for (Organism organism : organisms) {
 			organism.nextAction();
+		}*/
+		Iterator<Organism> i = organisms.iterator();
+		while (i.hasNext()) {
+			Organism o = i.next();
+			o.nextAction();
+			if (o.isMarkedForRemoval()) {
+				i.remove();
+				removeOrganism(o);
+			}
 		}
 	}
 	
