@@ -11,7 +11,9 @@ public class Organism {
 	private boolean isMarkedForRemoval;
 	
 	private int nutrition;
+	private PreyValues preyValues;	// the value of eating certain prey
 	
+	// hp values represent relative size as well as health
 	private int hp;
 	private int maxhp;
 	private int maxhpThreshold;		// maximum total hp when an adult
@@ -22,21 +24,6 @@ public class Organism {
 	private Color color;
 	
 	private ArrayList<Organism> mentalMap;
-	
-	// Creating an organism from nothing
-	public Organism() {
-		position = new Position(0,0);
-		walkingSpeed = 1;
-		mentalMap = new ArrayList<Organism>();
-		organismType = 2;
-		isAPlant = false;
-		color = new Color(0,100,0);
-		age = 0;
-		maxAge = 100;
-		maxhpThreshold = 100;
-		maxhp = maxhpThreshold / 2;
-		hp = maxhp;
-	}
 	
 	// New organisms are created from parent(s) parameters (genes)
 	public Organism(Organism parent) {
@@ -51,24 +38,42 @@ public class Organism {
 		maxhpThreshold = parent.maxhpThreshold;
 		maxhp = maxhpThreshold / 2;
 		hp = maxhp;
+		preyValues = parent.preyValues.copy();
 	}
 	
-	// Creates a new organism of the specified type
+	// Creates a new organism from nothing of the specified type
 	public Organism(int type) {
 		position = new Position(0,0);
-		walkingSpeed = 1;
 		mentalMap = new ArrayList<Organism>();
-		organismType = type;
-		isAPlant = false;
-		color = new Color(0,0,200);
 		age = 0;
-		maxAge = 20;
-		maxhpThreshold = 100;
-		maxhp = 50;
-		hp = 50;
-		if (type == 1) {
-			color = new Color(0,100,0);
+		preyValues = new PreyValues();
+
+		switch (type) {
+		case 2:
+			walkingSpeed = 1;
+			organismType = type;
+			isAPlant = false;
+			color = new Color(0,0,200);
+			maxAge = 20;
+			maxhpThreshold = 200;
+			maxhp = maxhpThreshold / 2;
+			hp = maxhp;
+			
+			preyValues.addPreyValue(1, 1.0f);
+			break;
+			
+		case 1:
+		default:
+			walkingSpeed = 0;
+			organismType = type;
 			isAPlant = true;
+			color = new Color(0,150,0);
+			maxAge = 30;
+			maxhpThreshold = 500;
+			maxhp = maxhpThreshold / 2;
+			hp = maxhp;
+			
+			preyValues.addPreyValue(0, 1.0f);
 		}
 	}
 	
@@ -98,6 +103,26 @@ public class Organism {
 	
 	public boolean isMarkedForRemoval() {
 		return isMarkedForRemoval;
+	}
+	
+	// Attempts to lower the organism's hp by specified amount
+	// If organism hp is less than amount, only remove available hp and kill organism
+	// Returns actual hp loss of organism
+	public int takeHP(int amount) {
+		if (hp > amount) {
+			hp -= amount;
+			return amount;
+		}
+		else {
+			int hpTaken = hp;
+			die();
+			return hpTaken;
+		}
+	}
+	
+	public void loseHP(int amount) {
+		hp -= amount;
+		if (hp <= 0) die();
 	}
 	
 	// The AI that determines and executes Organism behavior
@@ -225,28 +250,16 @@ public class Organism {
 	private void reproduce() {
 		Organism offspring = new Organism(this);
 		
-		int rand1 = Math.round(Math.random()) == 0 ? 1 : -1;
-		int rand2 = Math.round(Math.random()) == 0 ? 1 : -1;
-		Position[] birthLocations = new Position[4];
-		
-		if (rand1 == 1) {
-			birthLocations[0] = new Position(position.xPosition + rand2, position.yPosition);
-			birthLocations[1] = new Position(position.xPosition - rand2, position.yPosition);
-			birthLocations[2] = new Position(position.xPosition, position.yPosition + rand2);
-			birthLocations[3] = new Position(position.xPosition, position.yPosition + rand2);
-		}
-		else {
-			birthLocations[2] = new Position(position.xPosition + rand2, position.yPosition);
-			birthLocations[3] = new Position(position.xPosition - rand2, position.yPosition);
-			birthLocations[0] = new Position(position.xPosition, position.yPosition + rand2);
-			birthLocations[1] = new Position(position.xPosition, position.yPosition + rand2);
-		}
-		
-		for (int i = 0; i < birthLocations.length; i++) {
-			if (Environment.getEnvironment().addOrganism(offspring, birthLocations[i])) {
-				break;
-			}
-		}
+		Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(2));
+	}
+	
+	private void eat(Organism prey) {
+		int hpTaken = prey.takeHP(maxhpThreshold / 5);
+		nutrition += hpTaken * preyValues.getPreyValue(prey.getOrganismType());
+	}
+	
+	private void photosynthesize() {
+		nutrition += Environment.SUN_BRIGHTNESS * (hp / maxhp) * preyValues.getPreyValue(0) + (Environment.SUN_BRIGHTNESS / preyValues.getPreyValue(0));
 	}
 	
 	// updates the mental map of the organism

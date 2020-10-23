@@ -35,4 +35,33 @@ public class Position {
 		}
 		return p2;
 	}
+	
+	// returns a random position within a specified distance of this position
+	// can not return this position
+	public Position randomWithinDistance(int distance) {
+		if (distance == 0) return null;
+		Position pos;
+		do {
+			double w = distance * Math.sqrt(Math.random());
+			double t = 2 * Math.PI * Math.random();
+			double x = w * Math.cos(t);
+			double y = w * Math.sin(t);
+			pos = new Position((int) Math.round(x + xPosition), (int) Math.round(y + yPosition));
+		}
+		while (this.sameAs(pos));
+		
+		while (Math.abs(pos.xPosition - xPosition) + Math.abs(pos.yPosition - yPosition) > distance) {
+			if (Math.random() < 0.5) {
+				pos.xPosition -= Integer.signum(pos.xPosition - xPosition);
+			}
+			else {
+				pos.yPosition -= Integer.signum(pos.yPosition - yPosition);
+			}
+		}
+		return pos;
+	}
+	
+	public String toString() {
+		return xPosition + ", " + yPosition;
+	}
 }

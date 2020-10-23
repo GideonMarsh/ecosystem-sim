@@ -8,7 +8,8 @@ import java.util.Iterator;
 
 public class Environment {
 	
-	public static final int YEAR_LENGTH = 20;	// number of ticks in a year
+	public static final int YEAR_LENGTH = 20;		// number of ticks in a year
+	public static final int SUN_BRIGHTNESS = 100; 	// for nutrition gain from photosynthesis
 	private static Environment e;
 	
 	private class Tile {
