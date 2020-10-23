@@ -15,7 +15,7 @@ public class Organism {
 	private int maxhp;
 	private int maxhpThreshold;		// maximum total hp when an adult
 	
-	private double age;
+	private int age;
 	private int maxAge;
 	
 	private Color color;
@@ -56,6 +56,7 @@ public class Organism {
 		maxhp = 50;
 		hp = 50;
 		if (type == 1) {
+			maxAge = 10;
 			color = new Color(0,100,0);
 			isAPlant = true;
 		}
@@ -89,9 +90,10 @@ public class Organism {
 	// Behavior is split up among helper methods
 	public void nextAction() {
 		growOlder();
-		perceive();
-		move();
-		
+		if (! isACorpse) {
+			perceive();
+			move();
+		}
 	}
 	
 	private void move() {
@@ -174,18 +176,24 @@ public class Organism {
 	}
 	
 	private void die() {
-		if (isAPlant || isACorpse) Environment.getEnvironment().removeOrganism(this);
-		isACorpse = true;
-		hp = maxhp;
-		System.out.println("dead");
+		if (isAPlant || isACorpse) {
+			Environment.getEnvironment().removeOrganism(this);
+		}
+		else {
+			isACorpse = true;
+			hp = maxhp;
+		}
 	}
 	
 	private void growOlder() {
-		System.out.println(age);
-		age += 1.0 / Environment.YEAR_LENGTH;
+		System.out.println("Age: " + age);
+		age += 1;
 		
-		if (age % 1 == 0) {
-			if (age >= maxAge) this.die();
+		if (true) {
+			if (age >= maxAge) {
+				this.die();
+				return;
+			}
 			if (age < maxAge / 5) {
 				maxhp = (int) Math.round((maxhpThreshold / 2.0) + (maxhpThreshold / 2.0) * (age / (maxAge / 5)));
 			}
@@ -193,7 +201,6 @@ public class Organism {
 			if (age > maxAge * (4/5)) {
 				maxhp = (int) Math.round((maxhpThreshold / 2.0) + (maxhpThreshold / 2.0) * ((maxAge - age) / (maxAge * 4 / 5)));
 			}
-			System.out.println("MaxHP: " + maxhp);
 		}
 	}
 	

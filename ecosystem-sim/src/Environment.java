@@ -147,7 +147,6 @@ public class Environment {
 		
 		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(layer);
 		organisms.remove(o);
-		
 	}
 	
 	public ArrayList<Organism> resolvePerception(Organism o) {

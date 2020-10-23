@@ -31,7 +31,7 @@ public class Simulation {
 		Environment.makeEnvironment(WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
 		Environment.getEnvironment().generateGroundTypes();
 		
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < 0; i++) {
 			Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * ((WINDOW_WIDTH / 10) - 1)),(int) Math.round(Math.random() * ((WINDOW_HEIGHT / 10) - 1))));
 		}
 		for (int i = 0; i < 1; i++) {
