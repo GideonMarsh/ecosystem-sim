@@ -32,15 +32,25 @@ public class Organism {
 		isAPlant = false;
 		color = new Color(0,100,0);
 		age = 0;
-		maxAge = 20;
+		maxAge = 100;
 		maxhpThreshold = 100;
-		maxhp = 50;
-		hp = 50;
+		maxhp = maxhpThreshold / 2;
+		hp = maxhp;
 	}
 	
 	// New organisms are created from parent(s) parameters (genes)
 	public Organism(Organism parent) {
-		
+		position = new Position(0,0);
+		walkingSpeed = parent.walkingSpeed;
+		mentalMap = new ArrayList<Organism>();
+		organismType = parent.organismType;
+		isAPlant = parent.isAPlant;
+		color = parent.color;
+		age = 0;
+		maxAge = parent.maxAge;
+		maxhpThreshold = parent.maxhpThreshold;
+		maxhp = maxhpThreshold / 2;
+		hp = maxhp;
 	}
 	
 	// Creates a new organism of the specified type
@@ -97,6 +107,7 @@ public class Organism {
 		if (! isACorpse) {
 			perceive();
 			move();
+			if (isAPlant && Math.random() > 0.96) reproduce();
 		}
 	}
 	
@@ -168,12 +179,13 @@ public class Organism {
 			if (mentalMap == null) return;
 			for (Organism organism : mentalMap) {
 				if (! organism.equals(this) && organism.getPosition().sameAs(position)) {
-					Position newPosition;
+					/*Position newPosition;
 					do {
 						newPosition = new Position((int) Math.round(Math.random() * 49),(int) Math.round(Math.random() * 49));
 					}
 					while (! Environment.getEnvironment().moveOrganism(this, newPosition));
-					break;
+					break;*/
+					die();
 				}
 			}
 		}
@@ -206,6 +218,33 @@ public class Organism {
 			}
 			else {
 				maxhp = maxhpThreshold;
+			}
+		}
+	}
+	
+	private void reproduce() {
+		Organism offspring = new Organism(this);
+		
+		int rand1 = Math.round(Math.random()) == 0 ? 1 : -1;
+		int rand2 = Math.round(Math.random()) == 0 ? 1 : -1;
+		Position[] birthLocations = new Position[4];
+		
+		if (rand1 == 1) {
+			birthLocations[0] = new Position(position.xPosition + rand2, position.yPosition);
+			birthLocations[1] = new Position(position.xPosition - rand2, position.yPosition);
+			birthLocations[2] = new Position(position.xPosition, position.yPosition + rand2);
+			birthLocations[3] = new Position(position.xPosition, position.yPosition + rand2);
+		}
+		else {
+			birthLocations[2] = new Position(position.xPosition + rand2, position.yPosition);
+			birthLocations[3] = new Position(position.xPosition - rand2, position.yPosition);
+			birthLocations[0] = new Position(position.xPosition, position.yPosition + rand2);
+			birthLocations[1] = new Position(position.xPosition, position.yPosition + rand2);
+		}
+		
+		for (int i = 0; i < birthLocations.length; i++) {
+			if (Environment.getEnvironment().addOrganism(offspring, birthLocations[i])) {
+				break;
 			}
 		}
 	}

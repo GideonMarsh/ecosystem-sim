@@ -31,10 +31,10 @@ public class Simulation {
 		Environment.makeEnvironment(WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
 		Environment.getEnvironment().generateGroundTypes();
 		
-		for (int i = 0; i < 0; i++) {
+		for (int i = 0; i < 3; i++) {
 			Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * ((WINDOW_WIDTH / 10) - 1)),(int) Math.round(Math.random() * ((WINDOW_HEIGHT / 10) - 1))));
 		}
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < 20; i++) {
 			Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * ((WINDOW_WIDTH / 10) - 1)),(int) Math.round(Math.random() * ((WINDOW_HEIGHT / 10) - 1))));
 		}
 		/////End of initial environment conditions///// 
@@ -45,7 +45,7 @@ public class Simulation {
         f.pack();
         f.setVisible(true);
         
-        RepaintTask rt = new RepaintTask(Environment.getEnvironment(),f);
+        RepaintTask rt = new RepaintTask(f);
         Timer t = new Timer();
         t.schedule(rt, 500, SIMULATION_TICK);
 	}
@@ -92,16 +92,14 @@ class EnvironmentPanel extends JPanel {
 
 class RepaintTask extends TimerTask {
 	
-	private Environment env;
 	private JFrame jf;
 
-	public RepaintTask(Environment e, JFrame f) {
-		env = e;
+	public RepaintTask(JFrame f) {
 		jf = f;
 	}
 	
 	public void run() {
-		env.progressTime();
+		Environment.getEnvironment().progressTime();
 		jf.repaint();
 	}
 	

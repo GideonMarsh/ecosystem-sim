@@ -82,6 +82,7 @@ public class Environment {
 	
 	private Tile[][] environment;
 	private ArrayList<Organism> organisms;
+	private ArrayList<Organism> organismsToAdd;
 	
 	public static void makeEnvironment(int xSize, int ySize) {
 		e = new Environment(xSize, ySize);
@@ -99,6 +100,7 @@ public class Environment {
 			}
 		}
 		organisms = new ArrayList<Organism>();
+		organismsToAdd = new ArrayList<Organism>();
 		EnvXSize = xSize;
 		EnvYSize = ySize;
 	}
@@ -124,7 +126,7 @@ public class Environment {
 		if (environment[p.yPosition][p.xPosition].isOccupied(layer)) return false;
 		environment[p.yPosition][p.xPosition].setOccupant(o);
 		o.setPosition(p);
-		organisms.add(o);
+		organismsToAdd.add(o);
 		return true;
 	}
 	
@@ -155,9 +157,6 @@ public class Environment {
 	}
 	
 	public void progressTime() {
-		/*for (Organism organism : organisms) {
-			organism.nextAction();
-		}*/
 		Iterator<Organism> i = organisms.iterator();
 		while (i.hasNext()) {
 			Organism o = i.next();
@@ -167,6 +166,10 @@ public class Environment {
 				removeOrganism(o);
 			}
 		}
+		for (Organism organism : organismsToAdd) {
+			organisms.add(organism);
+		}
+		organismsToAdd.clear();
 	}
 	
 	// returns a 2D array of colors for drawing
