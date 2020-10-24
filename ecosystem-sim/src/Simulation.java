@@ -14,6 +14,7 @@ import java.awt.Dimension;
 public class Simulation {
 	private static final int WINDOW_WIDTH = 500;
 	private static final int WINDOW_HEIGHT = 500;
+	private static final int SQUARE_SIZE = 5;
 	
 	private static final int SIMULATION_TICK = 100;
 
@@ -28,20 +29,23 @@ public class Simulation {
 	
 	private static void createAndShowGUI() {
 		////////Initial environment conditions////////
-		Environment.makeEnvironment(WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
+		Environment.makeEnvironment(WINDOW_WIDTH / SQUARE_SIZE, WINDOW_HEIGHT / SQUARE_SIZE);
 		Environment.getEnvironment().generateGroundTypes();
 		
-		for (int i = 0; i < 0; i++) {
-			Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * ((WINDOW_WIDTH / 10) - 1)),(int) Math.round(Math.random() * ((WINDOW_HEIGHT / 10) - 1))));
+		for (int i = 0; i < 5; i++) {
+			Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
 		}
 		for (int i = 0; i < 1; i++) {
-			Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * ((WINDOW_WIDTH / 10) - 1)),(int) Math.round(Math.random() * ((WINDOW_HEIGHT / 10) - 1))));
+			Environment.getEnvironment().addOrganism(new Organism(3), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
+		}
+		for (int i = 0; i < 20; i++) {
+			Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
 		}
 		/////End of initial environment conditions///// 
 		
 		JFrame f = new JFrame("Ecosystem");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.add(new EnvironmentPanel(Environment.getEnvironment(), WINDOW_WIDTH, WINDOW_HEIGHT));//, f));
+        f.add(new EnvironmentPanel(Environment.getEnvironment(), WINDOW_WIDTH, WINDOW_HEIGHT, SQUARE_SIZE));//, f));
         f.pack();
         f.setVisible(true);
         
@@ -56,11 +60,13 @@ class EnvironmentPanel extends JPanel {
 	private Environment environment;
 	private int windowWidth;
 	private int windowHeight;
+	private int squareSize;
 	
-	public EnvironmentPanel(Environment e, int width, int height) {//, JFrame jf) {
+	public EnvironmentPanel(Environment e, int width, int height, int size) {//, JFrame jf) {
 		environment = e;
 		windowWidth = width;
 		windowHeight = height;
+		squareSize = size;
 		
 		/*
 		addMouseListener(new MouseAdapter() {
@@ -84,7 +90,7 @@ class EnvironmentPanel extends JPanel {
 		for (int i = 0; i < colorArray.length; i++) {
 			for (int j = 0; j < colorArray[i].length; j++) {
 				g.setColor(colorArray[i][j]);
-				g.fillRect(j * 10, i * 10, 10, 10);
+				g.fillRect(j * squareSize, i * squareSize, squareSize, squareSize);
 			}
 		}
 	}
@@ -100,7 +106,9 @@ class RepaintTask extends TimerTask {
 	
 	public void run() {
 		Environment.getEnvironment().progressTime();
+		if (Environment.getEnvironment().getWorldAge() % 3 == 0) Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * ((Environment.getEnvironment().getWorldHeight() - 1)))));
 		jf.repaint();
+		
 	}
 	
 }

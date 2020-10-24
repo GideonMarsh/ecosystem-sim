@@ -5,6 +5,9 @@ public class Organism {
 	private Position position;
 	private int walkingSpeed;
 	
+	// the target of AI behaviors such as eating
+	private Organism target;
+	
 	private int organismType;
 	private boolean isAPlant;
 	private boolean isACorpse;
@@ -28,6 +31,9 @@ public class Organism {
 	private double age;
 	private int maxAge;
 	
+	// Amount of hp to remove from the target of an attack from this organism
+	private int attackPower;
+	
 	/*
 	 *  represents the organism AI's current goals
 	 *  
@@ -39,13 +45,10 @@ public class Organism {
 	
 	private Color color;
 	
-	private ArrayList<Organism> mentalMap;
-	
 	// New organisms are created from parent(s) parameters (genes)
 	public Organism(Organism parent) {
 		position = new Position(0,0);
 		walkingSpeed = parent.walkingSpeed;
-		mentalMap = new ArrayList<Organism>();
 		organismType = parent.organismType;
 		isAPlant = parent.isAPlant;
 		color = parent.color;
@@ -63,12 +66,12 @@ public class Organism {
 		maxOffspring = 3;
 		numberOfOffspring = 0;
 		nutrition = hungryValue;
+		attackPower = 50;
 	}
 	
 	// Creates a new organism from nothing of the specified type
 	public Organism(int type) {
 		position = new Position(0,0);
-		mentalMap = new ArrayList<Organism>();
 		age = 0;
 		currentBehavior = 0;
 		preyValues = new PreyValues();
@@ -80,18 +83,41 @@ public class Organism {
 			organismType = type;
 			isAPlant = false;
 			color = new Color(0,0,200);
-			maxAge = 20;
+			maxAge = 10;
 			maxhpThreshold = 200;
 			maxhp = maxhpThreshold / 2;
 			hp = maxhp;
 			
-			preyValues.addPreyValue(1, 2.0f);
+			preyValues.addPreyValue(1, 1.5f);
 			
 			upkeep = 5;
 			hungryValue = upkeep * 50;
-			reproductionCost = maxhpThreshold / 4;
+			reproductionCost = maxhpThreshold / 2;
 			reproductionThreshold = reproductionCost + hungryValue;
-			maxOffspring = 5;
+			maxOffspring = 3;
+			
+			attackPower = 30;
+			break;
+		
+		case 3:
+			walkingSpeed = 1;
+			organismType = type;
+			isAPlant = false;
+			color = new Color(200,0,0);
+			maxAge = 10;
+			maxhpThreshold = 200;
+			maxhp = maxhpThreshold / 2;
+			hp = maxhp;
+			
+			preyValues.addPreyValue(2, 1.5f);
+			
+			upkeep = 5;
+			hungryValue = upkeep * 50;
+			reproductionCost = maxhpThreshold / 2;
+			reproductionThreshold = reproductionCost + hungryValue;
+			maxOffspring = 2;
+			
+			attackPower = 30;
 			break;
 			
 		case 1:
@@ -112,6 +138,8 @@ public class Organism {
 			reproductionCost = maxhpThreshold / 2;
 			reproductionThreshold = reproductionCost + hungryValue;
 			maxOffspring = 20;
+			
+			attackPower = 1;
 		}
 		nutrition = hungryValue;
 	}
@@ -196,7 +224,14 @@ public class Organism {
 			move();
 			if (isAPlant) photosynthesize();
 			else {
-				// animals eating goes here
+				if (currentBehavior == 1 && target != null && position.isWithinRange(target.position, 1)) {
+					if (target.isAPlant || target.isACorpse) {
+						eat(target);
+					}
+					else {
+						target.loseHP(attackPower);
+					}
+				}
 			}
 			if (currentBehavior == 2) {
 				reproduce();
@@ -205,20 +240,16 @@ public class Organism {
 	}
 	
 	private void move() {
-		if (! isAPlant) {
-			if (mentalMap == null || walkingSpeed == 0) return;
-			
+		if (walkingSpeed != 0) {
 			switch (currentBehavior) {
 
 			case 1:
-				Position destination = null;
-				for (Organism organism : mentalMap) {
-					if (organism.getOrganismType() == 1) {
-						destination = position.closest(destination,organism.getPosition());
+				if (target == null) {
+					for (int i = 0; i < walkingSpeed; i++) {
+						Environment.getEnvironment().moveOrganism(this, position.randomWithinDistance(1));
 					}
+					return;
 				}
-				
-				if (destination == null) return;
 				
 				/*
 				 * Organisms move cardinally one square at a time towards their destinations
@@ -238,10 +269,10 @@ public class Organism {
 				rand = Math.round(Math.random()) == 0 ? 1 : -1;
 				
 				for (int i = 0; i < walkingSpeed; i++) {
-					if (position.sameAs(destination)) break;
+					if (position.isWithinRange(target.position, 1)) break;
 					
-					xDif = destination.xPosition - position.xPosition;
-					yDif = destination.yPosition - position.yPosition;
+					xDif = target.position.xPosition - position.xPosition;
+					yDif = target.position.yPosition - position.yPosition;
 					
 					if (xDif == 0) {
 						chosenMoves[0] = new Position(position.xPosition, position.yPosition + Integer.signum(yDif));
@@ -275,14 +306,8 @@ public class Organism {
 				// if reproduce sexually, look for mate
 				break;
 			default:
-				Environment.getEnvironment().moveOrganism(this, position.randomWithinDistance(1));
-			}
-		}
-		else {
-			if (mentalMap == null) return;
-			for (Organism organism : mentalMap) {
-				if (! organism.equals(this) && organism.getPosition().sameAs(position)) {
-					die();
+				for (int i = 0; i < walkingSpeed; i++) {
+					Environment.getEnvironment().moveOrganism(this, position.randomWithinDistance(1));
 				}
 			}
 		}
@@ -335,14 +360,18 @@ public class Organism {
 			
 			Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(2));
 			expendEnergy(reproductionCost);
+			numberOfOffspring++;
 		}
 		else {
 			Organism offspring = new Organism(this);
 			
 			for (int i = 0; i < 4; i++) {
-				if (Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(2))) break;
+				if (Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(2))) {
+					expendEnergy(reproductionCost);
+					numberOfOffspring++;
+					break;
+				}
 			}
-			expendEnergy(reproductionCost);
 		}
 	}
 	
@@ -357,7 +386,28 @@ public class Organism {
 	
 	// updates the mental map of the organism
 	private void perceive() {
-		mentalMap = Environment.getEnvironment().resolvePerception(this);
+		ArrayList<Organism> mentalMap = Environment.getEnvironment().resolvePerception(this);
+		
+		target = null;
+		switch (currentBehavior) {
+		case 1:
+			for (Organism organism : mentalMap) {
+				if (preyValues.isPrey(organism.getOrganismType())) {
+					if (target == null) target = organism;
+					else {
+						if (position.closerThan(organism.position, target.position)) {
+							if (preyValues.getPreyValue(target.getOrganismType()) <= preyValues.getPreyValue(organism.getOrganismType()) || (organism.isACorpse && ! target.isACorpse)) {
+								target = organism;
+							}
+						}
+					}
+				}
+			}
+			break;
+		case 2:
+			break;
+		default:
+		}
 	}
 	
 	// subtracts energy spent from nutrition value
@@ -371,7 +421,6 @@ public class Organism {
 		}
 		if (hp <= 0) {
 			die();
-			System.out.println(organismType + " died of starvation");
 			return true;
 		}
 		return false;

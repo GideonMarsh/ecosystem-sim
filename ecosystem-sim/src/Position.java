@@ -22,18 +22,18 @@ public class Position {
 		return Math.abs(p.xPosition - xPosition) + Math.abs(p.yPosition - yPosition) <= distance;
 	}
 	
-	// returns the position that is closer to this position
-	// if distance equal, returns first position parameter
-	// if one position is null, return other position
-	// if both positions are null, return null
-	public Position closest(Position p1, Position p2) {
-		if (p1 == null) return p2;
-		if (p2 == null) return p1;
+	// returns true if p1 is closer to this position than p2
+	// if distance equal, returns true
+	// if position 1 is null, return false
+	// if position 2 is null or both positions are null, return true
+	public boolean closerThan(Position p1, Position p2) {
+		if (p2 == null) return true;
+		if (p1 == null) return false;
 		
 		if (Math.abs(p1.xPosition - xPosition) + Math.abs(p1.yPosition - yPosition) <= Math.abs(p2.xPosition - xPosition) + Math.abs(p2.yPosition - yPosition)) {
-			return p1;
+			return true;
 		}
-		return p2;
+		return false;
 	}
 	
 	// returns a random position within a specified distance of this position

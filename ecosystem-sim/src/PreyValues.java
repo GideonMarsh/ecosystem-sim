@@ -42,6 +42,13 @@ public class PreyValues {
 		values = new ArrayList<PreyValue>();
 	}
 	
+	public boolean isPrey(int preyType) {
+		for (PreyValue p : values) {
+			if (p.getPreyType() == preyType) return true;
+		}
+		return false;
+	}
+	
 	public void addPreyValue(int preyType, float preyValue) {
 		values.add(new PreyValue(preyType, preyValue));
 	}

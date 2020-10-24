@@ -77,12 +77,14 @@ public class Environment {
 		}
 	}
 	
-	private int EnvXSize;
-	private int EnvYSize;
+	private int envXSize;
+	private int envYSize;
 	
 	private Tile[][] environment;
 	private ArrayList<Organism> organisms;
 	private ArrayList<Organism> organismsToAdd;
+	
+	private double worldAge;
 	
 	public static void makeEnvironment(int xSize, int ySize) {
 		e = new Environment(xSize, ySize);
@@ -101,8 +103,21 @@ public class Environment {
 		}
 		organisms = new ArrayList<Organism>();
 		organismsToAdd = new ArrayList<Organism>();
-		EnvXSize = xSize;
-		EnvYSize = ySize;
+		envXSize = xSize;
+		envYSize = ySize;
+		worldAge = 0;
+	}
+	
+	public double getWorldAge() {
+		return worldAge;
+	}
+	
+	public int getWorldWidth() {
+		return envXSize;
+	}
+	
+	public int getWorldHeight() {
+		return envYSize;
 	}
 	
 	public void generateGroundTypes() {
@@ -122,7 +137,7 @@ public class Environment {
 		if (o.isAPlant()) layer = 1;
 		else layer = 2;
 		
-		if (p.xPosition >= EnvXSize || p.yPosition >= EnvYSize || p.xPosition < 0 || p.yPosition < 0) return false;
+		if (p.xPosition >= envXSize || p.yPosition >= envYSize || p.xPosition < 0 || p.yPosition < 0) return false;
 		if (environment[p.yPosition][p.xPosition].isOccupied(layer)) return false;
 		environment[p.yPosition][p.xPosition].setOccupant(o);
 		o.setPosition(p);
@@ -135,7 +150,7 @@ public class Environment {
 		if (o.isAPlant()) layer = 1;
 		else layer = 2;
 		
-		if (p.xPosition >= EnvXSize || p.yPosition >= EnvYSize || p.xPosition < 0 || p.yPosition < 0) return false;
+		if (p.xPosition >= envXSize || p.yPosition >= envYSize || p.xPosition < 0 || p.yPosition < 0) return false;
 		if (environment[p.yPosition][p.xPosition].isOccupied(layer)) return false;
 		environment[p.yPosition][p.xPosition].setOccupant(o);
 		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(layer);
@@ -170,13 +185,14 @@ public class Environment {
 			organisms.add(organism);
 		}
 		organismsToAdd.clear();
+		worldAge  = ((worldAge * YEAR_LENGTH) + 1) / YEAR_LENGTH;
 	}
 	
 	// returns a 2D array of colors for drawing
 	public Color[][] getColors() {
-		Color[][] colorArray = new Color[EnvYSize][EnvXSize];
-		for (int i = 0; i < EnvYSize; i++) {
-			for (int j = 0; j < EnvXSize; j++) {
+		Color[][] colorArray = new Color[envYSize][envXSize];
+		for (int i = 0; i < envYSize; i++) {
+			for (int j = 0; j < envXSize; j++) {
 				colorArray[i][j] = environment[i][j].getTileColor();
 			}
 		}
