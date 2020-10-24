@@ -31,17 +31,17 @@ public class Simulation {
 		Environment.makeEnvironment(WINDOW_WIDTH / 10, WINDOW_HEIGHT / 10);
 		Environment.getEnvironment().generateGroundTypes();
 		
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 0; i++) {
 			Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * ((WINDOW_WIDTH / 10) - 1)),(int) Math.round(Math.random() * ((WINDOW_HEIGHT / 10) - 1))));
 		}
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 1; i++) {
 			Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * ((WINDOW_WIDTH / 10) - 1)),(int) Math.round(Math.random() * ((WINDOW_HEIGHT / 10) - 1))));
 		}
 		/////End of initial environment conditions///// 
 		
 		JFrame f = new JFrame("Ecosystem");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.add(new EnvironmentPanel(Environment.getEnvironment(), WINDOW_WIDTH, WINDOW_HEIGHT));
+        f.add(new EnvironmentPanel(Environment.getEnvironment(), WINDOW_WIDTH, WINDOW_HEIGHT));//, f));
         f.pack();
         f.setVisible(true);
         
@@ -57,7 +57,7 @@ class EnvironmentPanel extends JPanel {
 	private int windowWidth;
 	private int windowHeight;
 	
-	public EnvironmentPanel(Environment e, int width, int height) {
+	public EnvironmentPanel(Environment e, int width, int height) {//, JFrame jf) {
 		environment = e;
 		windowWidth = width;
 		windowHeight = height;
@@ -68,8 +68,8 @@ class EnvironmentPanel extends JPanel {
                 environment.progressTime();
                 jf.repaint();
             }
-        });
-        */
+        });*/
+        
 	}
 	
 	public Dimension getPreferredSize() {
