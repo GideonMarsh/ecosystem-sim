@@ -106,7 +106,9 @@ class RepaintTask extends TimerTask {
 	
 	public void run() {
 		Environment.getEnvironment().progressTime();
-		if (Environment.getEnvironment().getWorldAge() % 3 == 0) Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * ((Environment.getEnvironment().getWorldHeight() - 1)))));
+		if (Environment.getEnvironment().getWorldAge() % 2 == 0) {
+			Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * ((Environment.getEnvironment().getWorldHeight() - 1)))));
+		}
 		jf.repaint();
 		
 	}

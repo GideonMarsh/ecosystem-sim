@@ -8,18 +8,30 @@ import java.util.Iterator;
 
 public class Environment {
 	
-	public static final int YEAR_LENGTH = 20;		// number of ticks in a year
+	public static final double YEAR_LENGTH = 30.0;		// number of ticks in a year
 	private static Environment e;
+	
+	// returns the base layer of the organism
+	public static int findLayer(Organism o) {
+		if (o.getFoodChainIdentifier() == 0) return 0;
+		else {
+			if (o.isACorpse()) return 1;
+			else {
+				if (o.getFoodChainIdentifier() == 1) return 2;
+				else return 3;
+			}
+		}
+	}
 	
 	private class Tile {
 		private final Color[] groundColors = {Color.white, new Color(200,255,200), new Color(200,200,255)};
 		
 		private int groundType;
-		private Organism plantLayer;
-		private Organism animalLayer;
+		private Organism[] layers;
 		
 		public Tile(int groundType) {
 			this.groundType = groundType;
+			layers = new Organism[4];
 		}
 		
 		public void setGroundType(int newType) {
@@ -31,48 +43,64 @@ public class Environment {
 		}
 		
 		public Organism getOccupant(int layer) {
-			switch (layer) {
-			case 1: return plantLayer;
-			case 2: return animalLayer;
-			}
-			return null;
+			return layers[layer];
 		}
 		
 		// returns true if successful and false if tile is currently occupied by same organism type
 		public boolean setOccupant(Organism newOccupant) {
-			if (newOccupant.isAPlant()) {
-				if (plantLayer != null) return false;
-				plantLayer = newOccupant;
+			int layer = findLayer(newOccupant);
+			
+			// large organisms take up their layer and all layers above them
+			if (newOccupant.isLarge()) {
+				for (int i = layer; i < layers.length; i++) {
+					if (layers[i] != null) return false;
+				}
+				for (int i = layer; i < layers.length; i++) {
+					layers[i] = newOccupant;
+				}
 				return true;
 			}
 			else {
-				if (animalLayer != null) return false;
-				animalLayer = newOccupant;
+				if (layers[layer] != null) return false;
+				layers[layer] = newOccupant;
 				return true;
 			}
-			
 		}
 		
 		public void removeOccupant(int layer) {
-			switch (layer) {
-			case 1: plantLayer = null;
-				break;
-			case 2: animalLayer = null;
-				break;
+			if (layers[layer] == null) return;
+			if (layers[layer].isLarge()) {
+				for (int i = layer; i < layers.length; i++) {
+					layers[i] = null;
+				}
+			}
+			else {
+				layers[layer] = null;
 			}
 		}
 		
-		public boolean isOccupied(int layer) {
-			switch (layer) {
-			case 1: return plantLayer != null;
-			case 2: return animalLayer != null;
+		public void removeOccupant(Organism o) {
+			for (int i = 0; i < layers.length; i++) {
+				if (layers[i] != null && layers[i].equals(o)) layers[i] = null;
 			}
-			return false;
+		}
+		
+		public boolean isOccupied(int layer, boolean isLarge) {
+			if (isLarge) {
+				for (int i = layer; i < layers.length; i++) {
+					if (layers[i] != null) return true;
+				}
+				return false;
+			}
+			else {
+				return layers[layer] != null;
+			}
 		}
 		
 		public Color getTileColor() {
-			if (animalLayer != null) return animalLayer.getColor();
-			if (plantLayer != null) return plantLayer.getColor();
+			for (int i = layers.length - 1; i >= 0; i--) {
+				if (layers[i] != null) return layers[i].getColor();
+			}
 			return groundColors[groundType];
 		}
 	}
@@ -128,17 +156,17 @@ public class Environment {
 		}
 	}
 	
+	public int getGroundType(Position p) {
+		return environment[p.yPosition][p.xPosition].getGroundType();
+	}
+	
 	public ArrayList<Organism> getOrganisms() {
 		return organisms;
 	}
 	
 	public boolean addOrganism(Organism o, Position p) {
-		int layer;
-		if (o.isAPlant()) layer = 1;
-		else layer = 2;
-		
 		if (p.xPosition >= envXSize || p.yPosition >= envYSize || p.xPosition < 0 || p.yPosition < 0) return false;
-		if (environment[p.yPosition][p.xPosition].isOccupied(layer)) return false;
+		if (environment[p.yPosition][p.xPosition].isOccupied(findLayer(o), o.isLarge())) return false;
 		environment[p.yPosition][p.xPosition].setOccupant(o);
 		o.setPosition(p);
 		organismsToAdd.add(o);
@@ -146,25 +174,32 @@ public class Environment {
 	}
 	
 	public boolean moveOrganism(Organism o, Position p) {
-		int layer;
-		if (o.isAPlant()) layer = 1;
-		else layer = 2;
-		
 		if (p.xPosition >= envXSize || p.yPosition >= envYSize || p.xPosition < 0 || p.yPosition < 0) return false;
-		if (environment[p.yPosition][p.xPosition].isOccupied(layer)) return false;
+		if (environment[p.yPosition][p.xPosition].isOccupied(findLayer(o), o.isLarge())) return false;
 		environment[p.yPosition][p.xPosition].setOccupant(o);
-		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(layer);
+		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(findLayer(o));
 		o.setPosition(p);
 		return true;
 	}
 	
+	public void moveToCorpseLayer(Organism o) {
+		// if tile conflict, existing corpse is always replaced by new corpse
+		if (environment[o.getPosition().yPosition][o.getPosition().xPosition].isOccupied(1, false)) {
+			Organism oldCorpse = environment[o.getPosition().yPosition][o.getPosition().xPosition].getOccupant(1);
+			environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(oldCorpse);
+			environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(o);
+			environment[o.getPosition().yPosition][o.getPosition().xPosition].setOccupant(o);
+			oldCorpse.setAsMarkedForRemoval();
+		}
+		else {
+			environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(o);
+			environment[o.getPosition().yPosition][o.getPosition().xPosition].setOccupant(o);
+		}
+	}
+	
 	// remove method is private to avoid ConcurrentModificationException
 	private void removeOrganism(Organism o) {
-		int layer;
-		if (o.isAPlant()) layer = 1;
-		else layer = 2;
-		
-		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(layer);
+		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(findLayer(o));
 	}
 	
 	public ArrayList<Organism> resolvePerception(Organism o) {
@@ -185,7 +220,7 @@ public class Environment {
 			organisms.add(organism);
 		}
 		organismsToAdd.clear();
-		worldAge  = ((worldAge * YEAR_LENGTH) + 1) / YEAR_LENGTH;
+		worldAge  = Math.round((worldAge * YEAR_LENGTH) + 1) / YEAR_LENGTH;
 	}
 	
 	// returns a 2D array of colors for drawing

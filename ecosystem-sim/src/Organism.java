@@ -9,13 +9,15 @@ public class Organism {
 	private Organism target;
 	
 	private int organismType;
-	private boolean isAPlant;
+	private int foodChainIdentifier;	// 0 = plant, 1 = herbivore, 2 = omnivore, 3 = carnivore
 	private boolean isACorpse;
 	private boolean isMarkedForRemoval;
 	
-	private int nutrition;
+	private boolean isLarge;			// large organisms take up multiple layers
+	
+	private double nutrition;
 	private PreyValues preyValues;		// the value of eating certain prey
-	private int upkeep; 				// nutrition lost each game tick
+	private double upkeep; 				// nutrition lost each game tick
 	private int hungryValue;			// the value at which organism will seek out food
 	
 	private int reproductionCost;		// the nutrition cost for reproduction
@@ -50,7 +52,7 @@ public class Organism {
 		position = new Position(0,0);
 		walkingSpeed = parent.walkingSpeed;
 		organismType = parent.organismType;
-		isAPlant = parent.isAPlant;
+		foodChainIdentifier = parent.foodChainIdentifier;
 		color = parent.color;
 		age = 0;
 		currentBehavior = 0;
@@ -81,19 +83,17 @@ public class Organism {
 		case 2:
 			walkingSpeed = 1;
 			organismType = type;
-			isAPlant = false;
+			foodChainIdentifier = 1;
 			color = new Color(0,0,200);
 			maxAge = 10;
 			maxhpThreshold = 200;
 			maxhp = maxhpThreshold / 2;
 			hp = maxhp;
 			
-			preyValues.addPreyValue(1, 1.5f);
+			preyValues.addPreyValue(1, 3.0f);
 			
-			upkeep = 5;
-			hungryValue = upkeep * 50;
-			reproductionCost = maxhpThreshold / 2;
-			reproductionThreshold = reproductionCost + hungryValue;
+			upkeep = 4;
+			hungryValue = (int) Math.round(upkeep * 50);
 			maxOffspring = 3;
 			
 			attackPower = 30;
@@ -102,19 +102,17 @@ public class Organism {
 		case 3:
 			walkingSpeed = 1;
 			organismType = type;
-			isAPlant = false;
+			foodChainIdentifier = 3;
 			color = new Color(200,0,0);
 			maxAge = 10;
 			maxhpThreshold = 200;
 			maxhp = maxhpThreshold / 2;
 			hp = maxhp;
 			
-			preyValues.addPreyValue(2, 1.5f);
+			preyValues.addPreyValue(2, 6.0f);
 			
-			upkeep = 5;
-			hungryValue = upkeep * 50;
-			reproductionCost = maxhpThreshold / 2;
-			reproductionThreshold = reproductionCost + hungryValue;
+			upkeep = 4;
+			hungryValue = (int) Math.round(upkeep * 50);
 			maxOffspring = 2;
 			
 			attackPower = 30;
@@ -124,7 +122,7 @@ public class Organism {
 		default:
 			walkingSpeed = 0;
 			organismType = type;
-			isAPlant = true;
+			foodChainIdentifier = 0;
 			color = new Color(0,150,0);
 			maxAge = 20;
 			maxhpThreshold = 400;
@@ -134,14 +132,14 @@ public class Organism {
 			preyValues.addPreyValue(0, 1.0f);
 			
 			upkeep = 10;
-			hungryValue = upkeep * 50;
-			reproductionCost = maxhpThreshold / 2;
-			reproductionThreshold = reproductionCost + hungryValue;
+			hungryValue = (int) Math.round(upkeep * 50);
 			maxOffspring = 20;
 			
 			attackPower = 1;
 		}
-		nutrition = hungryValue;
+		nutrition = hungryValue * 1.5;
+		reproductionCost = (int) (maxhpThreshold * 1.5 + hungryValue);
+		reproductionThreshold = reproductionCost + hungryValue;
 	}
 	
 	public int getOrganismType() {
@@ -164,12 +162,24 @@ public class Organism {
 		position = newPosition;
 	}
 	
-	public boolean isAPlant() {
-		return isAPlant;
+	public int getFoodChainIdentifier() {
+		return foodChainIdentifier;
+	}
+	
+	public boolean isACorpse() {
+		return isACorpse;
+	}
+	
+	public boolean isLarge() {
+		return isLarge;
 	}
 	
 	public boolean isMarkedForRemoval() {
 		return isMarkedForRemoval;
+	}
+	
+	public void setAsMarkedForRemoval() {
+		isMarkedForRemoval = true;
 	}
 	
 	// Attempts to lower the organism's hp by specified amount
@@ -222,10 +232,10 @@ public class Organism {
 			// perform actions according to current behavior
 			perceive();
 			move();
-			if (isAPlant) photosynthesize();
+			if (foodChainIdentifier == 0) photosynthesize();
 			else {
 				if (currentBehavior == 1 && target != null && position.isWithinRange(target.position, 1)) {
-					if (target.isAPlant || target.isACorpse) {
+					if (target.foodChainIdentifier == 0 || target.isACorpse) {
 						eat(target);
 					}
 					else {
@@ -314,18 +324,19 @@ public class Organism {
 	}
 	
 	private void die() {
-		if (isAPlant || isACorpse) {
+		if (foodChainIdentifier == 0 || isACorpse) {
 			isMarkedForRemoval = true;
 		}
 		else {
 			isACorpse = true;
 			hp = maxhp;
 			color = Color.black;
+			Environment.getEnvironment().moveToCorpseLayer(this);
 		}
 	}
 	
 	private void growOlder() {
-		age  = ((age * Environment.YEAR_LENGTH) + 1) / Environment.YEAR_LENGTH;
+		age  = Math.round((age * Environment.YEAR_LENGTH) + 1) / Environment.YEAR_LENGTH;
 		if (expendEnergy(upkeep)) return;
 		
 		// Organisms can expend nutrition to recover hp slowly over time, if nutrition is high enough
@@ -355,7 +366,7 @@ public class Organism {
 	}
 	
 	private void reproduce() {
-		if (isAPlant) {
+		if (foodChainIdentifier == 0) {
 			Organism offspring = new Organism(this);
 			
 			Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(2));
@@ -381,7 +392,7 @@ public class Organism {
 	
 	private void photosynthesize() {
 		nutrition += ((hp / 10) * preyValues.getPreyValue(0)) + Math.max(0, maxhpThreshold * (1 - (preyValues.getPreyValue(0)/2)) / 50);
-		if (nutrition > maxhp * 2) nutrition = maxhp * 2;
+		if (nutrition > reproductionCost * 2) nutrition = reproductionCost * 2;
 	}
 	
 	// updates the mental map of the organism
@@ -395,9 +406,15 @@ public class Organism {
 				if (preyValues.isPrey(organism.getOrganismType())) {
 					if (target == null) target = organism;
 					else {
+						// if the next potential target is closer than the current target...
 						if (position.closerThan(organism.position, target.position)) {
-							if (preyValues.getPreyValue(target.getOrganismType()) <= preyValues.getPreyValue(organism.getOrganismType()) || (organism.isACorpse && ! target.isACorpse)) {
-								target = organism;
+							// and it's worth the same nutrition or more than the current target...
+							if (preyValues.getPreyValue(target.getOrganismType()) <= preyValues.getPreyValue(organism.getOrganismType())) {
+								// and if we're looking for a corpse and the current target isn't one (or we're starving and need the closest nutrition)...
+								if (! target.isACorpse || organism.isACorpse || nutrition <= upkeep * 5) {
+									// then the next target should be our new target
+									target = organism;
+								}
 							}
 						}
 					}
@@ -413,7 +430,7 @@ public class Organism {
 	// subtracts energy spent from nutrition value
 	// if nutrition value reaches 0, all other expenditures come directly from hp
 	// returns true if organism dies, false if otherwise
-	private boolean expendEnergy(int amount) {
+	private boolean expendEnergy(double amount) {
 		nutrition -= amount;
 		if (nutrition < 0) {
 			hp += nutrition;
