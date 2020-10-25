@@ -93,10 +93,9 @@ public class Organism {
 			preyValues.addPreyValue(1, 3.0f);
 			
 			upkeep = 4;
-			hungryValue = (int) Math.round(upkeep * 50);
 			maxOffspring = 3;
 			
-			attackPower = 30;
+			attackPower = 20;
 			break;
 		
 		case 3:
@@ -112,10 +111,9 @@ public class Organism {
 			preyValues.addPreyValue(2, 6.0f);
 			
 			upkeep = 4;
-			hungryValue = (int) Math.round(upkeep * 50);
 			maxOffspring = 2;
 			
-			attackPower = 30;
+			attackPower = 20;
 			break;
 			
 		case 1:
@@ -125,20 +123,20 @@ public class Organism {
 			foodChainIdentifier = 0;
 			color = new Color(0,150,0);
 			maxAge = 20;
-			maxhpThreshold = 400;
+			maxhpThreshold = 500;
 			maxhp = maxhpThreshold / 2;
 			hp = maxhp;
 			
 			preyValues.addPreyValue(0, 1.0f);
 			
 			upkeep = 10;
-			hungryValue = (int) Math.round(upkeep * 50);
 			maxOffspring = 20;
 			
 			attackPower = 1;
 		}
+		hungryValue = (int) Math.round(upkeep * 50);
 		nutrition = hungryValue * 1.5;
-		reproductionCost = (int) (maxhpThreshold * 1.5 + hungryValue);
+		reproductionCost = (int) (upkeep * 20 + hungryValue * 1.5);
 		reproductionThreshold = reproductionCost + hungryValue;
 	}
 	
@@ -341,8 +339,8 @@ public class Organism {
 		
 		// Organisms can expend nutrition to recover hp slowly over time, if nutrition is high enough
 		if (hp < maxhp && nutrition > (hungryValue / 2) + (upkeep * 3)) {
-			if (expendEnergy(upkeep * 3)) return;
-			hp = Math.min(maxhp, hp + maxhp / 20);
+			if (expendEnergy(upkeep)) return;
+			hp = Math.min(maxhp, hp + maxhp / 40);
 		}
 		
 		if (! isACorpse && age > maxAge) {
@@ -369,7 +367,7 @@ public class Organism {
 		if (foodChainIdentifier == 0) {
 			Organism offspring = new Organism(this);
 			
-			Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(2));
+			Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(3));
 			expendEnergy(reproductionCost);
 			numberOfOffspring++;
 		}
