@@ -38,7 +38,7 @@ public class Simulation {
 		for (int i = 0; i < 1; i++) {
 			Environment.getEnvironment().addOrganism(new Organism(3), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
 		}
-		for (int i = 0; i < 30; i++) {
+		for (int i = 0; i < 20; i++) {
 			Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
 		}
 		/////End of initial environment conditions///// 

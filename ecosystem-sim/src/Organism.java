@@ -24,6 +24,7 @@ public class Organism {
 	private int reproductionThreshold;	// the minimum nutrition value to begin reproduction
 	private int maxOffspring;			// the maximum amount of offspring this organism can have
 	private int numberOfOffspring;		// the current amount of offspring this organism has had
+	private int litterSize;				// the number of offspring birthed at one time
 	
 	// hp values represent relative size as well as health
 	private int hp;
@@ -63,12 +64,13 @@ public class Organism {
 		preyValues = parent.preyValues.copy();
 		upkeep = parent.upkeep;
 		hungryValue = parent.hungryValue;
-		reproductionCost = parent.reproductionCost;
-		reproductionThreshold = parent.reproductionThreshold;
-		maxOffspring = 3;
+		maxOffspring = parent.maxOffspring;
+		litterSize = parent.litterSize;
 		numberOfOffspring = 0;
-		nutrition = hungryValue;
-		attackPower = 50;
+		nutrition = hungryValue * 1.5;
+		attackPower = parent.attackPower;
+		reproductionCost = (int) Math.round((100 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
+		reproductionThreshold = reproductionCost + hungryValue;
 	}
 	
 	// Creates a new organism from nothing of the specified type
@@ -94,8 +96,9 @@ public class Organism {
 			
 			upkeep = 4;
 			maxOffspring = 3;
+			litterSize = 1;
 			
-			attackPower = 20;
+			attackPower = 5;
 			break;
 		
 		case 3:
@@ -112,8 +115,9 @@ public class Organism {
 			
 			upkeep = 4;
 			maxOffspring = 2;
+			litterSize = 2;
 			
-			attackPower = 20;
+			attackPower = 30;
 			break;
 			
 		case 1:
@@ -123,20 +127,21 @@ public class Organism {
 			foodChainIdentifier = 0;
 			color = new Color(0,150,0);
 			maxAge = 20;
-			maxhpThreshold = 500;
+			maxhpThreshold = 300;
 			maxhp = maxhpThreshold / 2;
 			hp = maxhp;
 			
 			preyValues.addPreyValue(0, 1.0f);
 			
-			upkeep = 10;
+			upkeep = 8;
 			maxOffspring = 20;
+			litterSize = 1;
 			
 			attackPower = 1;
 		}
 		hungryValue = (int) Math.round(upkeep * 50);
 		nutrition = hungryValue * 1.5;
-		reproductionCost = (int) (upkeep * 20 + hungryValue * 1.5);
+		reproductionCost = (int) Math.round((100 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
 		reproductionThreshold = reproductionCost + hungryValue;
 	}
 	
@@ -214,12 +219,18 @@ public class Organism {
 			else {
 				// organisms can only reproduce during adulthood
 				if (maxhp == maxhpThreshold && numberOfOffspring < maxOffspring) {
-					// organisms will only reproduce if they have sufficient nutrition
-					if (nutrition < reproductionThreshold) {
-						currentBehavior = 1;
+					// organisms will only reproduce at regular intervals in their lives
+					if (age > (maxAge / 5) + (maxAge * (3.0/5.0) / maxOffspring) * numberOfOffspring) {
+						// organisms will only reproduce if they have sufficient nutrition
+						if (nutrition < reproductionThreshold) {
+							currentBehavior = 1;
+						}
+						else {
+							currentBehavior = 2;
+						}
 					}
 					else {
-						currentBehavior = 2;
+						currentBehavior = 0;
 					}
 				}
 				else {
@@ -365,20 +376,30 @@ public class Organism {
 	
 	private void reproduce() {
 		if (foodChainIdentifier == 0) {
-			Organism offspring = new Organism(this);
-			
-			Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(3));
+			for (int i = 0; i < litterSize; i++) {
+				Organism offspring = new Organism(this);
+				
+				Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(3));
+			}
+			numberOfOffspring += litterSize;
 			expendEnergy(reproductionCost);
-			numberOfOffspring++;
 		}
 		else {
-			Organism offspring = new Organism(this);
-			
-			for (int i = 0; i < 4; i++) {
-				if (Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(2))) {
-					expendEnergy(reproductionCost);
-					numberOfOffspring++;
-					break;
+			for (int i = 0; i < litterSize; i++) {
+				Organism offspring = new Organism(this);
+				
+				Position[] birthPositions = new Position[4];
+				birthPositions[0] = new Position(position.xPosition + 1, position.yPosition);
+				birthPositions[1] = new Position(position.xPosition, position.yPosition + 1);
+				birthPositions[2] = new Position(position.xPosition - 1, position.yPosition);
+				birthPositions[3] = new Position(position.xPosition, position.yPosition - 1);
+				
+				for (int j = 0; j < birthPositions.length; j++) {
+					if (Environment.getEnvironment().addOrganism(offspring, birthPositions[j])) {
+						expendEnergy(reproductionCost / litterSize);
+						numberOfOffspring++;
+						break;
+					}
 				}
 			}
 		}
@@ -395,6 +416,7 @@ public class Organism {
 	
 	// updates the mental map of the organism
 	private void perceive() {
+		if (foodChainIdentifier == 0) return;
 		ArrayList<Organism> mentalMap = Environment.getEnvironment().resolvePerception(this);
 		
 		target = null;
