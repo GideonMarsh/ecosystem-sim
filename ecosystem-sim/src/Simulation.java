@@ -41,6 +41,9 @@ public class Simulation {
 		for (int i = 0; i < 20; i++) {
 			Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
 		}
+		for (int i = 0; i < 5; i++) {
+			Environment.getEnvironment().addOrganism(new Organism(4), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
+		}
 		/////End of initial environment conditions///// 
 		
 		JFrame f = new JFrame("Ecosystem");

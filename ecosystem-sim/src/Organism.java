@@ -67,10 +67,11 @@ public class Organism {
 		maxOffspring = parent.maxOffspring;
 		litterSize = parent.litterSize;
 		numberOfOffspring = 0;
-		nutrition = hungryValue * 1.5;
+		nutrition = hungryValue * (Math.random() + 0.5);
 		attackPower = parent.attackPower;
 		reproductionCost = (int) Math.round((100 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
 		reproductionThreshold = reproductionCost + hungryValue;
+		isLarge = parent.isLarge;
 	}
 	
 	// Creates a new organism from nothing of the specified type
@@ -80,6 +81,7 @@ public class Organism {
 		currentBehavior = 0;
 		preyValues = new PreyValues();
 		numberOfOffspring = 0;
+		isLarge = false;
 
 		switch (type) {
 		case 2:
@@ -89,10 +91,9 @@ public class Organism {
 			color = new Color(0,0,200);
 			maxAge = 10;
 			maxhpThreshold = 200;
-			maxhp = maxhpThreshold / 2;
-			hp = maxhp;
 			
 			preyValues.addPreyValue(1, 3.0f);
+			preyValues.addPreyValue(4, 2.0f);
 			
 			upkeep = 4;
 			maxOffspring = 3;
@@ -108,8 +109,6 @@ public class Organism {
 			color = new Color(200,0,0);
 			maxAge = 10;
 			maxhpThreshold = 200;
-			maxhp = maxhpThreshold / 2;
-			hp = maxhp;
 			
 			preyValues.addPreyValue(2, 6.0f);
 			
@@ -119,26 +118,44 @@ public class Organism {
 			
 			attackPower = 30;
 			break;
+		
+		case 4:
+			walkingSpeed = 0;
+			organismType = type;
+			foodChainIdentifier = 0;
+			color = new Color(0,120,0);
+			maxAge = 30;
+			maxhpThreshold = 500;
+			
+			preyValues.addPreyValue(0, 1.0f);
+			
+			upkeep = 10;
+			maxOffspring = 10;
+			litterSize = 1;
+			
+			isLarge = true;
+			attackPower = 1;
+			break;
 			
 		case 1:
 		default:
 			walkingSpeed = 0;
 			organismType = type;
 			foodChainIdentifier = 0;
-			color = new Color(0,150,0);
-			maxAge = 20;
-			maxhpThreshold = 300;
-			maxhp = maxhpThreshold / 2;
-			hp = maxhp;
+			color = new Color(0,200,0);
+			maxAge = 5;
+			maxhpThreshold = 50;
 			
-			preyValues.addPreyValue(0, 1.0f);
+			preyValues.addPreyValue(0, 2.0f);
 			
-			upkeep = 8;
-			maxOffspring = 20;
+			upkeep = 2;
+			maxOffspring = 10;
 			litterSize = 1;
 			
 			attackPower = 1;
 		}
+		maxhp = maxhpThreshold / 2;
+		hp = maxhp;
 		hungryValue = (int) Math.round(upkeep * 50);
 		nutrition = hungryValue * 1.5;
 		reproductionCost = (int) Math.round((100 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
@@ -237,7 +254,7 @@ public class Organism {
 					currentBehavior = 0;
 				}
 			}
-			
+
 			// perform actions according to current behavior
 			perceive();
 			move();
@@ -348,6 +365,9 @@ public class Organism {
 		age  = Math.round((age * Environment.YEAR_LENGTH) + 1) / Environment.YEAR_LENGTH;
 		if (expendEnergy(upkeep)) return;
 		
+		// Corpses starve (functionally decompose) at double speed
+		if (isACorpse) {if (expendEnergy(upkeep)) return;}
+		
 		// Organisms can expend nutrition to recover hp slowly over time, if nutrition is high enough
 		if (hp < maxhp && nutrition > (hungryValue / 2) + (upkeep * 3)) {
 			if (expendEnergy(upkeep)) return;
@@ -411,7 +431,6 @@ public class Organism {
 	
 	private void photosynthesize() {
 		nutrition += ((hp / 10) * preyValues.getPreyValue(0)) + Math.max(0, maxhpThreshold * (1 - (preyValues.getPreyValue(0)/2)) / 50);
-		if (nutrition > reproductionCost * 2) nutrition = reproductionCost * 2;
 	}
 	
 	// updates the mental map of the organism
@@ -426,15 +445,27 @@ public class Organism {
 				if (preyValues.isPrey(organism.getOrganismType())) {
 					if (target == null) target = organism;
 					else {
-						// if the next potential target is closer than the current target...
-						if (position.closerThan(organism.position, target.position)) {
-							// and it's worth the same nutrition or more than the current target...
-							if (preyValues.getPreyValue(target.getOrganismType()) <= preyValues.getPreyValue(organism.getOrganismType())) {
-								// and if we're looking for a corpse and the current target isn't one (or we're starving and need the closest nutrition)...
-								if (! target.isACorpse || organism.isACorpse || nutrition <= upkeep * 5) {
-									// then the next target should be our new target
-									target = organism;
-								}
+						// if any target is found immediately next to this organism, choose it and stop looking
+						if (position.isWithinRange(organism.position, 1)) {
+							target = organism;
+							break;
+						}
+						/*
+						 * Organism will switch targets only under the following circumstances:
+						 * Organism is starving and new target is closer
+						 * Organism is not starving and new target is more valuable
+						 * Organism is not starving, new target is equally valuable, and new target is closer
+						 * 
+						 * Additionally, carnivores/omnivores will prioritize corpses over live prey unless they're starving
+						 */
+						boolean c = position.closerThan(organism.position, target.position);
+						boolean ev = preyValues.getPreyValue(target.getOrganismType()) == preyValues.getPreyValue(organism.getOrganismType());
+						boolean v = preyValues.getPreyValue(target.getOrganismType()) < preyValues.getPreyValue(organism.getOrganismType());
+						boolean s = nutrition <= upkeep * 5;
+
+						if ((c && s) || (!s && (v || (ev && c)))) {
+							if (! target.isACorpse || organism.isACorpse || s) {
+								target = organism;
 							}
 						}
 					}
