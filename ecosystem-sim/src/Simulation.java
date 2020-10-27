@@ -31,18 +31,18 @@ public class Simulation {
 		////////Initial environment conditions////////
 		Environment.makeEnvironment(WINDOW_WIDTH / SQUARE_SIZE, WINDOW_HEIGHT / SQUARE_SIZE);
 		Environment.getEnvironment().generateGroundTypes();
-		
+		/*
 		for (int i = 0; i < 5; i++) {
-			Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
+			while (! Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}
 		for (int i = 0; i < 1; i++) {
-			Environment.getEnvironment().addOrganism(new Organism(3), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
-		}
+			while (! Environment.getEnvironment().addOrganism(new Organism(3), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
+		}*/
 		for (int i = 0; i < 20; i++) {
-			Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
+			while (! Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}
 		for (int i = 0; i < 5; i++) {
-			Environment.getEnvironment().addOrganism(new Organism(4), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1))));
+			while (! Environment.getEnvironment().addOrganism(new Organism(4), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}
 		/////End of initial environment conditions///// 
 		
@@ -109,8 +109,16 @@ class RepaintTask extends TimerTask {
 	
 	public void run() {
 		Environment.getEnvironment().progressTime();
-		if (Environment.getEnvironment().getWorldAge() % 2 == 0) {
-			Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * ((Environment.getEnvironment().getWorldHeight() - 1)))));
+		if (Environment.getEnvironment().getWorldAge() % 1 == 0) System.out.println(Environment.getEnvironment().getWorldAge());
+		if (Environment.getEnvironment().getWorldAge() == 30) {
+			for (int i = 0; i < 5; i++) {
+				while (! Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
+			}
+		}
+		if (Environment.getEnvironment().getWorldAge() == 40) {
+			for (int i = 0; i < 1; i++) {
+				while (! Environment.getEnvironment().addOrganism(new Organism(3), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
+			}		
 		}
 		jf.repaint();
 		

@@ -6,9 +6,9 @@
  * Prey type 0 is reserved for photosynthesis
  * Instead of taking hp from prey, photosynthesis generates nutrition based on the consumer's hp
  * Higher hp means larger and healthier, so more nutrition is gained
- * Prey value for photosynthesis represents hp dependence
- * 0 hp dependence means photosynthesis produces flat nutrition value regardless of hp
- * higher hp dependence means more nutrition is generated at higher hp, but less at lower hp
+ * Prey value for photosynthesis represents water dependence
+ * 0 dependence means photosynthesis produces flat nutrition value regardless terrain type
+ * higher hp dependence means more nutrition is generated on more irrigated terrain, but less on other terrain
  */
 import java.util.ArrayList;
 

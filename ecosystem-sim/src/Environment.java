@@ -31,6 +31,9 @@ public class Environment {
 	private static final double[] WATER_SPEED_MODIFIER = {0.50, 0.00, 0.00, 0.00, 1.00, 1.00};
 	private static final double[] AIR_SPEED_MODIFIER   = {1.00, 1.00, 1.00, 1.00, 1.00, 1.00};
 	private static final double[] LARGE_SPEED_MODIFIER = {0.00, 1.00, 1.00, 1.00, 0.34, 1.00};
+	
+	// water value determines how easily plants can thrive
+	private static final double[] WATER_VALUES = {0.0, 1.1, 0.8, 0.3, 0.95, 0.95};
 
 	// returns the base layer of the organism
 	public static int findLayer(Organism o) {
@@ -190,10 +193,10 @@ public class Environment {
 	public void generateGroundTypes() {
 		for (int i = 0; i < environment.length; i++) {
 			for (int j = 0; j < environment[i].length; j++) {
-				if (i > 20) environment[i][j].setGroundType(2);
-				if (i > 40) environment[i][j].setGroundType(3);
-				if (i > 60) environment[i][j].setGroundType(4);
-				if (i > 80) environment[i][j].setGroundType(5);
+				if (j < 15) environment[i][j].setGroundType(5);
+				if (j >= 15 && j < 20) environment[i][j].setGroundType(4);
+				if (j > 40) environment[i][j].setGroundType(2);
+				if (j > 80) environment[i][j].setGroundType(3);
 			}
 		}
 	}
@@ -300,7 +303,11 @@ public class Environment {
 			organisms.add(organism);
 		}
 		organismsToAdd.clear();
-		worldAge  = Math.round((worldAge * YEAR_LENGTH) + 1) / YEAR_LENGTH;
+		worldAge = Math.round((worldAge * YEAR_LENGTH) + 1) / YEAR_LENGTH;
+	}
+	
+	public double getWaterValue(Position p) {
+		return WATER_VALUES[environment[p.yPosition][p.xPosition].getGroundType()];
 	}
 	
 	// returns a 2D array of colors for drawing

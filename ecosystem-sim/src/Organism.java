@@ -2,6 +2,11 @@ import java.awt.Color;
 import java.util.ArrayList;
 
 public class Organism {
+	
+	// organisms will only update their target at intervals
+	// higher values improve simulation performance at the cost of organism AI performance
+	private static final int PERCEPTION_CHECK_INTERVAL = 2;
+	
 	private Position position;
 	// 0 = land movement, 1 = water movement, 2 = air movement (see Environment class)
 	// plants are incapable of movement; having a movement speed represents the ability to grow
@@ -12,6 +17,7 @@ public class Organism {
 	
 	// the target of AI behaviors such as eating
 	private Organism target;
+	private int checkPerceptionValue;
 	
 	private int organismType;
 	private int foodChainIdentifier;	// 0 = plant, 1 = herbivore, 2 = omnivore, 3 = carnivore
@@ -55,6 +61,7 @@ public class Organism {
 	
 	// New organisms are created from parent(s) parameters (genes)
 	public Organism(Organism parent) {
+		checkPerceptionValue = 0;
 		position = new Position(0,0);
 		walkingSpeeds = parent.walkingSpeeds;
 		organismType = parent.organismType;
@@ -81,6 +88,7 @@ public class Organism {
 	
 	// Creates a new organism from nothing of the specified type
 	public Organism(int type) {
+		checkPerceptionValue = 0;
 		position = new Position(0,0);
 		age = 0;
 		currentBehavior = 0;
@@ -100,8 +108,8 @@ public class Organism {
 			maxAge = 10;
 			maxhpThreshold = 200;
 			
-			preyValues.addPreyValue(1, 3.0f);
-			preyValues.addPreyValue(4, 2.0f);
+			preyValues.addPreyValue(1, 2.2f);
+			preyValues.addPreyValue(4, 1.8f);
 			
 			upkeep = 4;
 			maxOffspring = 3;
@@ -120,7 +128,7 @@ public class Organism {
 			maxAge = 10;
 			maxhpThreshold = 200;
 			
-			preyValues.addPreyValue(2, 6.0f);
+			preyValues.addPreyValue(2, 5.0f);
 			
 			upkeep = 4;
 			maxOffspring = 2;
@@ -136,10 +144,10 @@ public class Organism {
 			organismType = type;
 			foodChainIdentifier = 0;
 			color = new Color(0,120,0);
-			maxAge = 30;
-			maxhpThreshold = 500;
+			maxAge = 20;
+			maxhpThreshold = 300;
 			
-			preyValues.addPreyValue(0, 1.0f);
+			preyValues.addPreyValue(0, 2.0f);
 			
 			upkeep = 10;
 			maxOffspring = 10;
@@ -160,13 +168,11 @@ public class Organism {
 			maxAge = 5;
 			maxhpThreshold = 50;
 			
-			preyValues.addPreyValue(0, 2.0f);
+			preyValues.addPreyValue(0, 1.0f);
 			
 			upkeep = 2;
 			maxOffspring = 10;
 			litterSize = 1;
-			
-			isLarge = true;
 			
 			attackPower = 1;
 		}
@@ -424,14 +430,22 @@ public class Organism {
 			/*
 			 * Plants will choose a single location for their offspring and attempt to spawn them there
 			 * They will treat the reproduction as a success even if the tile is occupied and it can't be spawned
+			 * 
+			 * If plants have excessive nutrition, they can reproduce additional times
+			 * Each additional litter costs 1.5 times the previous one
 			 */
-			for (int i = 0; i < litterSize; i++) {
-				Organism offspring = new Organism(this);
-				
-				Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(3));
-			}
-			numberOfOffspring += litterSize;
-			expendEnergy(reproductionCost);
+			double currentCost = 1.0;
+			do {
+				for (int i = 0; i < litterSize; i++) {
+					Organism offspring = new Organism(this);
+					
+					Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(3));
+				}
+				numberOfOffspring += litterSize;
+				expendEnergy(reproductionCost);
+				currentCost += 0.5;
+				}
+			while (nutrition >= reproductionThreshold * currentCost);
 		}
 		else {
 			/*
@@ -463,12 +477,19 @@ public class Organism {
 	}
 	
 	private void photosynthesize() {
-		nutrition += ((hp / 10) * preyValues.getPreyValue(0)) + Math.max(0, maxhpThreshold * (1 - (preyValues.getPreyValue(0)/2)) / 50);
+		nutrition += Math.max(0, (maxhpThreshold / maxhp) * ((hp / 20.0) + (hp  * 3.0 / 20.0) * (preyValues.getPreyValue(0) * Environment.getEnvironment().getWaterValue(this.position) + (1 - preyValues.getPreyValue(0)))));
 	}
 	
 	// updates the mental map of the organism
 	private void perceive() {
 		if (foodChainIdentifier == 0) return;
+		
+		checkPerceptionValue++;
+		if (checkPerceptionValue % PERCEPTION_CHECK_INTERVAL == 0) {
+			checkPerceptionValue = 0;
+			return;
+		}
+		
 		ArrayList<Organism> mentalMap = Environment.getEnvironment().resolvePerception(this);
 		
 		target = null;
