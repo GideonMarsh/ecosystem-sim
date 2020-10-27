@@ -8,6 +8,7 @@ public class Organism {
 	// onto terrain that requires that movement speed to cross
 	private int[] walkingSpeeds;
 	private double movementPoints;
+	private int remainingMovement;
 	
 	// the target of AI behaviors such as eating
 	private Organism target;
@@ -110,7 +111,7 @@ public class Organism {
 			break;
 		
 		case 3:
-			walkingSpeeds[0] = 1;
+			walkingSpeeds[0] = 2;
 			walkingSpeeds[1] = 0;
 			walkingSpeeds[2] = 0;
 			organismType = type;
@@ -205,6 +206,14 @@ public class Organism {
 	
 	public void setMovementPoints(double newValue) {
 		movementPoints = newValue;
+	}
+	
+	public int getRemainingMovement() {
+		return remainingMovement;
+	}
+	
+	public void setRemainingMovement(int newValue) {
+		remainingMovement = newValue;
 	}
 	
 	public int getFoodChainIdentifier() {
@@ -302,35 +311,31 @@ public class Organism {
 	
 	private void move() {
 		if (foodChainIdentifier != 0) {
-			switch (currentBehavior) {
-
-			case 1:
+			// remaining movement should be initially set higher than any possible organism movement speed
+			remainingMovement = 1000;
+			while (remainingMovement > 0) {
 				if (target == null) {
-					//for (int i = 0; i < walkingSpeed; i++) {
-						Environment.getEnvironment().moveOrganism(this, position.randomWithinDistance(1));
-					//}
-					return;
+					Environment.getEnvironment().moveOrganism(this, position.randomWithinDistance(1));
 				}
-				
-				/*
-				 * Organisms move cardinally one square at a time towards their destinations
-				 * Their moves are chosen sequentially from the chosenMoves array
-				 * If no valid moves are found, organism remains stationary
-				 * If the organism is alinged with its destination on one axis, it will first try
-				 * to move directly towards its destination, and if it fails it will attempt to
-				 * move to the side.
-				 * If the organism is not aligned with its destination on an axis, it will first
-				 * randomly choose which axis to move along and then try to move along that axis
-				 * first and the other axis second; if neither work, then it tries the opposite
-				 * direction on the non-chosen axis
-				 */
-				int xDif, yDif, rand;
-				Position[] chosenMoves = new Position[3];
-				
-				rand = Math.round(Math.random()) == 0 ? 1 : -1;
-				
-				//for (int i = 0; i < walkingSpeed; i++) {
-					if (position.isWithinRange(target.position, 1)) break;
+				else {	
+					/*
+					 * Organisms move cardinally one square at a time towards their destinations
+					 * Their moves are chosen sequentially from the chosenMoves array
+					 * If no valid moves are found, organism remains stationary
+					 * If the organism is aligned with its destination on one axis, it will first try
+					 * to move directly towards its destination, and if it fails it will attempt to
+					 * move to the side.
+					 * If the organism is not aligned with its destination on an axis, it will first
+					 * randomly choose which axis to move along and then try to move along that axis
+					 * first and the other axis second; if neither work, then it tries the opposite
+					 * direction on the non-chosen axis
+					 */
+					int xDif, yDif, rand;
+					Position[] chosenMoves = new Position[3];
+					
+					rand = Math.round(Math.random()) == 0 ? 1 : -1;
+					
+					if (position.isWithinRange(target.position, 1)) return;
 					
 					xDif = target.position.xPosition - position.xPosition;
 					yDif = target.position.yPosition - position.yPosition;
@@ -361,15 +366,8 @@ public class Organism {
 					for (int j = 0; j < chosenMoves.length; j++) {
 						if (Environment.getEnvironment().moveOrganism(this, chosenMoves[j])) break;
 					}
-				//}
-				break;
-			case 2:
-				// if reproduce sexually, look for mate
-				break;
-			default:
-				//for (int i = 0; i < walkingSpeed; i++) {
-					Environment.getEnvironment().moveOrganism(this, position.randomWithinDistance(1));
-				//}
+				}
+				remainingMovement--;
 			}
 		}
 	}

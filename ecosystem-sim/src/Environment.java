@@ -27,7 +27,7 @@ public class Environment {
 			new Color(100,100,200)};
 	
 	public static final int MOVEMENT_TYPES = 3;
-	private static final double[] LAND_SPEED_MODIFIER  = {0.50, 1.00, 1.00, 1.00, 0.34, 0.00};
+	private static final double[] LAND_SPEED_MODIFIER  = {0.50, 1.00, 1.00, 1.00, 0.50, 0.00};
 	private static final double[] WATER_SPEED_MODIFIER = {0.50, 0.00, 0.00, 0.00, 1.00, 1.00};
 	private static final double[] AIR_SPEED_MODIFIER   = {1.00, 1.00, 1.00, 1.00, 1.00, 1.00};
 	private static final double[] LARGE_SPEED_MODIFIER = {0.00, 1.00, 1.00, 1.00, 0.34, 1.00};
@@ -193,7 +193,7 @@ public class Environment {
 				if (i > 20) environment[i][j].setGroundType(2);
 				if (i > 40) environment[i][j].setGroundType(3);
 				if (i > 60) environment[i][j].setGroundType(4);
-				if (i > 80) environment[i][j].setGroundType(5);
+				//if (i > 80) environment[i][j].setGroundType(5);
 			}
 		}
 	}
@@ -237,6 +237,8 @@ public class Environment {
 		
 		double highestMovement = findHighestMovement(o,p);
 		if (highestMovement == 0) return false;
+		
+		if (o.getRemainingMovement() > (int) highestMovement) o.setRemainingMovement((int) highestMovement); 
 		
 		if (highestMovement + o.getMovementPoints() < 1) {
 			o.setMovementPoints(o.getMovementPoints() + highestMovement);
