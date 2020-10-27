@@ -3,7 +3,11 @@ import java.util.ArrayList;
 
 public class Organism {
 	private Position position;
-	private int walkingSpeed;
+	// 0 = land movement, 1 = water movement, 2 = air movement (see Environment class)
+	// plants are incapable of movement; having a movement speed represents the ability to grow
+	// onto terrain that requires that movement speed to cross
+	private int[] walkingSpeeds;
+	private double movementPoints;
 	
 	// the target of AI behaviors such as eating
 	private Organism target;
@@ -51,7 +55,7 @@ public class Organism {
 	// New organisms are created from parent(s) parameters (genes)
 	public Organism(Organism parent) {
 		position = new Position(0,0);
-		walkingSpeed = parent.walkingSpeed;
+		walkingSpeeds = parent.walkingSpeeds;
 		organismType = parent.organismType;
 		foodChainIdentifier = parent.foodChainIdentifier;
 		color = parent.color;
@@ -82,10 +86,13 @@ public class Organism {
 		preyValues = new PreyValues();
 		numberOfOffspring = 0;
 		isLarge = false;
+		walkingSpeeds = new int[Environment.MOVEMENT_TYPES];
 
 		switch (type) {
 		case 2:
-			walkingSpeed = 1;
+			walkingSpeeds[0] = 1;
+			walkingSpeeds[1] = 0;
+			walkingSpeeds[2] = 0;
 			organismType = type;
 			foodChainIdentifier = 1;
 			color = new Color(0,0,200);
@@ -103,7 +110,9 @@ public class Organism {
 			break;
 		
 		case 3:
-			walkingSpeed = 1;
+			walkingSpeeds[0] = 1;
+			walkingSpeeds[1] = 0;
+			walkingSpeeds[2] = 0;
 			organismType = type;
 			foodChainIdentifier = 3;
 			color = new Color(200,0,0);
@@ -120,7 +129,9 @@ public class Organism {
 			break;
 		
 		case 4:
-			walkingSpeed = 0;
+			walkingSpeeds[0] = 1;
+			walkingSpeeds[1] = 0;
+			walkingSpeeds[2] = 0;
 			organismType = type;
 			foodChainIdentifier = 0;
 			color = new Color(0,120,0);
@@ -139,7 +150,9 @@ public class Organism {
 			
 		case 1:
 		default:
-			walkingSpeed = 0;
+			walkingSpeeds[0] = 1;
+			walkingSpeeds[1] = 0;
+			walkingSpeeds[2] = 0;
 			organismType = type;
 			foodChainIdentifier = 0;
 			color = new Color(0,200,0);
@@ -180,6 +193,18 @@ public class Organism {
 	
 	public void setPosition(Position newPosition){;
 		position = newPosition;
+	}
+	
+	public int getWalkingSpeed(int type) {
+		return walkingSpeeds[type];
+	}
+	
+	public double getMovementPoints() {
+		return movementPoints;
+	}
+	
+	public void setMovementPoints(double newValue) {
+		movementPoints = newValue;
 	}
 	
 	public int getFoodChainIdentifier() {
@@ -276,14 +301,14 @@ public class Organism {
 	}
 	
 	private void move() {
-		if (walkingSpeed != 0) {
+		if (foodChainIdentifier != 0) {
 			switch (currentBehavior) {
 
 			case 1:
 				if (target == null) {
-					for (int i = 0; i < walkingSpeed; i++) {
+					//for (int i = 0; i < walkingSpeed; i++) {
 						Environment.getEnvironment().moveOrganism(this, position.randomWithinDistance(1));
-					}
+					//}
 					return;
 				}
 				
@@ -304,7 +329,7 @@ public class Organism {
 				
 				rand = Math.round(Math.random()) == 0 ? 1 : -1;
 				
-				for (int i = 0; i < walkingSpeed; i++) {
+				//for (int i = 0; i < walkingSpeed; i++) {
 					if (position.isWithinRange(target.position, 1)) break;
 					
 					xDif = target.position.xPosition - position.xPosition;
@@ -336,15 +361,15 @@ public class Organism {
 					for (int j = 0; j < chosenMoves.length; j++) {
 						if (Environment.getEnvironment().moveOrganism(this, chosenMoves[j])) break;
 					}
-				}
+				//}
 				break;
 			case 2:
 				// if reproduce sexually, look for mate
 				break;
 			default:
-				for (int i = 0; i < walkingSpeed; i++) {
+				//for (int i = 0; i < walkingSpeed; i++) {
 					Environment.getEnvironment().moveOrganism(this, position.randomWithinDistance(1));
-				}
+				//}
 			}
 		}
 	}
