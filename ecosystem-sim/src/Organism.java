@@ -111,7 +111,7 @@ public class Organism {
 			break;
 		
 		case 3:
-			walkingSpeeds[0] = 2;
+			walkingSpeeds[0] = 1;
 			walkingSpeeds[1] = 0;
 			walkingSpeeds[2] = 0;
 			organismType = type;
@@ -165,6 +165,8 @@ public class Organism {
 			upkeep = 2;
 			maxOffspring = 10;
 			litterSize = 1;
+			
+			isLarge = true;
 			
 			attackPower = 1;
 		}
@@ -419,6 +421,10 @@ public class Organism {
 	
 	private void reproduce() {
 		if (foodChainIdentifier == 0) {
+			/*
+			 * Plants will choose a single location for their offspring and attempt to spawn them there
+			 * They will treat the reproduction as a success even if the tile is occupied and it can't be spawned
+			 */
 			for (int i = 0; i < litterSize; i++) {
 				Organism offspring = new Organism(this);
 				
@@ -428,6 +434,10 @@ public class Organism {
 			expendEnergy(reproductionCost);
 		}
 		else {
+			/*
+			 * Animals will attempt to spawn their offspring adjacent to themselves
+			 * They will try all available tiles and won't pay reproduction costs if an empty spot cannot be found
+			 */
 			for (int i = 0; i < litterSize; i++) {
 				Organism offspring = new Organism(this);
 				
@@ -465,30 +475,32 @@ public class Organism {
 		switch (currentBehavior) {
 		case 1:
 			for (Organism organism : mentalMap) {
-				if (preyValues.isPrey(organism.getOrganismType())) {
-					if (target == null) target = organism;
-					else {
-						// if any target is found immediately next to this organism, choose it and stop looking
-						if (position.isWithinRange(organism.position, 1)) {
-							target = organism;
-							break;
-						}
-						/*
-						 * Organism will switch targets only under the following circumstances:
-						 * Organism is starving and new target is closer
-						 * Organism is not starving and new target is more valuable
-						 * Organism is not starving, new target is equally valuable, and new target is closer
-						 * 
-						 * Additionally, carnivores/omnivores will prioritize corpses over live prey unless they're starving
-						 */
-						boolean c = position.closerThan(organism.position, target.position);
-						boolean ev = preyValues.getPreyValue(target.getOrganismType()) == preyValues.getPreyValue(organism.getOrganismType());
-						boolean v = preyValues.getPreyValue(target.getOrganismType()) < preyValues.getPreyValue(organism.getOrganismType());
-						boolean s = nutrition <= upkeep * 5;
-
-						if ((c && s) || (!s && (v || (ev && c)))) {
-							if (! target.isACorpse || organism.isACorpse || s) {
+				if (Environment.getEnvironment().canReach(this, organism.position)) {
+					if (preyValues.isPrey(organism.getOrganismType())) {
+						if (target == null) target = organism;
+						else {
+							// if any target is found immediately next to this organism, choose it and stop looking
+							if (position.isWithinRange(organism.position, 1)) {
 								target = organism;
+								break;
+							}
+							/*
+							 * Organism will switch targets only under the following circumstances:
+							 * Organism is starving and new target is closer
+							 * Organism is not starving and new target is more valuable
+							 * Organism is not starving, new target is equally valuable, and new target is closer
+							 * 
+							 * Additionally, carnivores/omnivores will prioritize corpses over live prey unless they're starving
+							 */
+							boolean c = position.closerThan(organism.position, target.position);
+							boolean ev = preyValues.getPreyValue(target.getOrganismType()) == preyValues.getPreyValue(organism.getOrganismType());
+							boolean v = preyValues.getPreyValue(target.getOrganismType()) < preyValues.getPreyValue(organism.getOrganismType());
+							boolean s = nutrition <= upkeep * 5;
+	
+							if ((c && s) || (!s && (v || (ev && c)))) {
+								if (! target.isACorpse || organism.isACorpse || s) {
+									target = organism;
+								}
 							}
 						}
 					}

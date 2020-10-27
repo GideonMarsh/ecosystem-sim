@@ -193,7 +193,7 @@ public class Environment {
 				if (i > 20) environment[i][j].setGroundType(2);
 				if (i > 40) environment[i][j].setGroundType(3);
 				if (i > 60) environment[i][j].setGroundType(4);
-				//if (i > 80) environment[i][j].setGroundType(5);
+				if (i > 80) environment[i][j].setGroundType(5);
 			}
 		}
 	}
@@ -216,6 +216,15 @@ public class Environment {
 			if (d > highestMovement) highestMovement = d;
 		}
 		return highestMovement;
+	}
+	
+	// returns false if position p is surrounded by tiles that are inaccessible to organism o
+	public boolean canReach(Organism o, Position p) {
+		if (p.xPosition + 1 < envXSize && findHighestMovement(o,new Position(p.xPosition + 1, p.yPosition)) > 0) return true;
+		if (p.xPosition - 1 >= 0 && findHighestMovement(o,new Position(p.xPosition - 1, p.yPosition)) > 0) return true;
+		if (p.yPosition + 1 < envXSize && findHighestMovement(o,new Position(p.xPosition, p.yPosition + 1)) > 0) return true;
+		if (p.yPosition - 1 >= 0 && findHighestMovement(o,new Position(p.xPosition, p.yPosition - 1)) > 0) return true;
+		return false;
 	}
 	
 	public boolean addOrganism(Organism o, Position p) {
