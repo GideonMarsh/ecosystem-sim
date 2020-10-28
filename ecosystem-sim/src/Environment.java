@@ -33,7 +33,7 @@ public class Environment {
 	private static final double[] LARGE_SPEED_MODIFIER = {0.00, 1.00, 1.00, 1.00, 0.34, 1.00};
 	
 	// water value determines how easily plants can thrive
-	private static final double[] WATER_VALUES = {0.0, 1.1, 0.8, 0.3, 0.95, 0.95};
+	private static final double[] WATER_VALUES = {0.0, 1.2, 0.7, 0.2, 1.0, 1.0};
 
 	// returns the base layer of the organism
 	public static int findLayer(Organism o) {
@@ -151,8 +151,7 @@ public class Environment {
 	private int envYSize;
 	
 	private Tile[][] environment;
-	private ArrayList<Organism> organisms;
-	private ArrayList<Organism> organismsToAdd;
+	private OrganismList organisms;
 	
 	private double worldAge;
 	
@@ -171,8 +170,7 @@ public class Environment {
 				environment[i][j] = new Tile(1);
 			}
 		}
-		organisms = new ArrayList<Organism>();
-		organismsToAdd = new ArrayList<Organism>();
+		organisms = new OrganismList();
 		envXSize = xSize;
 		envYSize = ySize;
 		worldAge = 0;
@@ -205,7 +203,7 @@ public class Environment {
 		return environment[p.yPosition][p.xPosition].getGroundType();
 	}
 	
-	public ArrayList<Organism> getOrganisms() {
+	public OrganismList getOrganisms() {
 		return organisms;
 	}
 	
@@ -239,7 +237,7 @@ public class Environment {
 		
 		environment[p.yPosition][p.xPosition].setOccupant(o);
 		o.setPosition(p);
-		organismsToAdd.add(o);
+		organisms.add(o);
 		return true;
 	}
 	
@@ -285,12 +283,12 @@ public class Environment {
 		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(findLayer(o));
 	}
 	
-	public ArrayList<Organism> resolvePerception(Organism o) {
-		return organisms;
+	public OrganismList resolvePerception(Organism o) {
+		return organisms.copy();
 	}
 	
 	public void progressTime() {
-		Iterator<Organism> i = organisms.iterator();
+		/*Iterator<Organism> i = organisms.iterator();
 		while (i.hasNext()) {
 			Organism o = i.next();
 			o.nextAction();
@@ -298,11 +296,16 @@ public class Environment {
 				i.remove();
 				removeOrganism(o);
 			}
+		}*/
+		organisms.startIteration();
+		while(! organisms.endOfList()) {
+			organisms.getCurrentOrganism().nextAction();
+			if (organisms.getCurrentOrganism().isMarkedForRemoval()) {
+				removeOrganism(organisms.getCurrentOrganism());
+				organisms.removeCurrent();
+			}
+			else {organisms.next();}
 		}
-		for (Organism organism : organismsToAdd) {
-			organisms.add(organism);
-		}
-		organismsToAdd.clear();
 		worldAge = Math.round((worldAge * YEAR_LENGTH) + 1) / YEAR_LENGTH;
 	}
 	

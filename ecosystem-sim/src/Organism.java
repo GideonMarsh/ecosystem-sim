@@ -267,8 +267,9 @@ public class Organism {
 	// The AI that determines and executes Organism behavior
 	// Behavior is split up among helper methods
 	public void nextAction() {
+        Simulation.benchmarkTime(0);
 		growOlder();
-			
+        Simulation.benchmarkTime(1);
 		if (! isACorpse) {
 			
 			// decide what current behavior of organism should be
@@ -296,10 +297,12 @@ public class Organism {
 					currentBehavior = 0;
 				}
 			}
-
+			Simulation.benchmarkTime(2);
 			// perform actions according to current behavior
 			perceive();
+			Simulation.benchmarkTime(3);
 			move();
+			Simulation.benchmarkTime(4);
 			if (foodChainIdentifier == 0) photosynthesize();
 			else {
 				if (currentBehavior == 1 && target != null && position.isWithinRange(target.position, 1)) {
@@ -311,9 +314,11 @@ public class Organism {
 					}
 				}
 			}
+			Simulation.benchmarkTime(5);
 			if (currentBehavior == 2) {
 				reproduce();
 			}
+			Simulation.benchmarkTime(6);
 		}
 	}
 	
@@ -485,24 +490,24 @@ public class Organism {
 		if (foodChainIdentifier == 0) return;
 		
 		checkPerceptionValue++;
-		if (checkPerceptionValue % PERCEPTION_CHECK_INTERVAL == 0) {
-			checkPerceptionValue = 0;
+		if (checkPerceptionValue % PERCEPTION_CHECK_INTERVAL != 0) {
 			return;
 		}
 		
-		ArrayList<Organism> mentalMap = Environment.getEnvironment().resolvePerception(this);
+		OrganismList mentalMap = Environment.getEnvironment().resolvePerception(this);
 		
 		target = null;
 		switch (currentBehavior) {
 		case 1:
-			for (Organism organism : mentalMap) {
-				if (Environment.getEnvironment().canReach(this, organism.position)) {
-					if (preyValues.isPrey(organism.getOrganismType())) {
-						if (target == null) target = organism;
+			mentalMap.startIteration();
+			while (! mentalMap.endOfList()) {
+				if (Environment.getEnvironment().canReach(this, mentalMap.getCurrentOrganism().position)) {
+					if (preyValues.isPrey(mentalMap.getCurrentOrganism().getOrganismType())) {
+						if (target == null) target = mentalMap.getCurrentOrganism();
 						else {
 							// if any target is found immediately next to this organism, choose it and stop looking
-							if (position.isWithinRange(organism.position, 1)) {
-								target = organism;
+							if (position.isWithinRange(mentalMap.getCurrentOrganism().position, 1)) {
+								target = mentalMap.getCurrentOrganism();
 								break;
 							}
 							/*
@@ -513,19 +518,20 @@ public class Organism {
 							 * 
 							 * Additionally, carnivores/omnivores will prioritize corpses over live prey unless they're starving
 							 */
-							boolean c = position.closerThan(organism.position, target.position);
-							boolean ev = preyValues.getPreyValue(target.getOrganismType()) == preyValues.getPreyValue(organism.getOrganismType());
-							boolean v = preyValues.getPreyValue(target.getOrganismType()) < preyValues.getPreyValue(organism.getOrganismType());
+							boolean c = position.closerThan(mentalMap.getCurrentOrganism().position, target.position);
+							boolean ev = preyValues.getPreyValue(target.getOrganismType()) == preyValues.getPreyValue(mentalMap.getCurrentOrganism().getOrganismType());
+							boolean v = preyValues.getPreyValue(target.getOrganismType()) < preyValues.getPreyValue(mentalMap.getCurrentOrganism().getOrganismType());
 							boolean s = nutrition <= upkeep * 5;
 	
 							if ((c && s) || (!s && (v || (ev && c)))) {
-								if (! target.isACorpse || organism.isACorpse || s) {
-									target = organism;
+								if (! target.isACorpse || mentalMap.getCurrentOrganism().isACorpse || s) {
+									target = mentalMap.getCurrentOrganism();
 								}
 							}
 						}
 					}
 				}
+				mentalMap.next();
 			}
 			break;
 		case 2:
