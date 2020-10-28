@@ -14,6 +14,10 @@ import javax.swing.KeyStroke;
 
 import java.awt.Dimension;
 
+/*
+ * Display can be moved with the arrow keys, zoomed in and out with + and -, and reset with space
+ * 
+ */
 public class Simulation {
 	private static final int WINDOW_WIDTH = 600;
 	private static final int WINDOW_HEIGHT = 600;
@@ -61,7 +65,6 @@ public class Simulation {
 		execTimes = new long[8];
 		////////Initial environment conditions////////
 		Environment.makeEnvironment(ENVIRONMENT_SIZE, ENVIRONMENT_SIZE);
-		Environment.getEnvironment().generateGroundTypes();
 		/*
 		for (int i = 0; i < 5; i++) {
 			while (! Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));

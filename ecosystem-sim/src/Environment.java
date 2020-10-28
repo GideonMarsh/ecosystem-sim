@@ -12,28 +12,20 @@ public class Environment {
 	private static Environment e;
 	
 	/*
-	 * Ground types are as follows:
-	 * 0 - special ground type for sharing a space with a large organism
-	 * 1 - irrigated land
-	 * 2 - dry land
-	 * 3 - desert
-	 * 4 - shallow water
-	 * 5 - deep water
+	 * Movement types are as follows:
+	 * 0 = land movement, 1 = water movement, 2 = air movement
 	 * 
-	 * Large creatures are subject to an additional penalty for certain ground types
+	 * Tile movement modifiers are offset by 1 from movement types
+	 * 
+	 * Moving onto tiles that contain a large creature has an additional movement penalty
+	 * This is stored as movement modifier 0
+	 * 
+	 * Large creatures may also be subject to an additional movement penalty
+	 * 
+	 * Water value determines how easily plants can thrive
 	 */
-	private static final Color[] GROUND_COLORS = {Color.white, new Color(165,130,60), 
-			new Color(210,190,90), new Color(255,250,120), new Color(150,150,255), 
-			new Color(100,100,200)};
 	
 	public static final int MOVEMENT_TYPES = 3;
-	private static final double[] LAND_SPEED_MODIFIER  = {0.50, 1.00, 1.00, 1.00, 0.50, 0.00};
-	private static final double[] WATER_SPEED_MODIFIER = {0.50, 0.00, 0.00, 0.00, 1.00, 1.00};
-	private static final double[] AIR_SPEED_MODIFIER   = {1.00, 1.00, 1.00, 1.00, 1.00, 1.00};
-	private static final double[] LARGE_SPEED_MODIFIER = {0.00, 1.00, 1.00, 1.00, 0.34, 1.00};
-	
-	// water value determines how easily plants can thrive
-	private static final double[] WATER_VALUES = {0.0, 1.2, 0.7, 0.2, 1.0, 1.0};
 
 	// returns the base layer of the organism
 	public static int findLayer(Organism o) {
@@ -49,16 +41,37 @@ public class Environment {
 	
 	private class Tile {
 		
-		private int groundType;
+		private double[] speedModifiers;
+		private double[] largeSpeedModifiers;
+		private double waterValue;
 		private Organism[] layers;
+		private Color color;
 		
-		public Tile(int groundType) {
-			this.groundType = groundType;
+		// instantiation of Tile parameters handled by Environment.generateGroundTypes()
+		public Tile() {
+			speedModifiers = new double[MOVEMENT_TYPES + 1];
+			largeSpeedModifiers = new double[MOVEMENT_TYPES + 1];
 			layers = new Organism[4];
 		}
 		
-		public void setGroundType(int newType) {
-			groundType = newType;
+		public void setWaterVal(double newValue) {
+			waterValue = newValue;
+		}
+		
+		public void setSpeedModifiers(double[] newMods) {
+			for (int i = 0; i < speedModifiers.length; i++) {
+				speedModifiers[i] = newMods[i];
+			}
+		}
+		
+		public void setLargeSpeedModifiers(double[] newMods) {
+			for (int i = 0; i < largeSpeedModifiers.length; i++) {
+				largeSpeedModifiers[i] = newMods[i];
+			}
+		}
+		
+		public void setColor(Color newColor) {
+			color = newColor;
 		}
 		
 		public boolean hasLargeOccupant() {
@@ -66,10 +79,6 @@ public class Environment {
 				if (layers[i] != null && layers[i].isLarge()) return true;
 			}
 			return false;
-		}
-		
-		public int getGroundType() {
-			return groundType;
 		}
 		
 		public Organism getOccupant(int layer) {
@@ -111,39 +120,18 @@ public class Environment {
 			for (int i = layers.length - 1; i >= 0; i--) {
 				if (layers[i] != null) return layers[i].getColor();
 			}
-			return GROUND_COLORS[groundType];
+			return color;
 		}
 		
-		// 0 = land movement, 1 = water movement, 2 = air movement
 		public double getMovementModifier(int type, boolean isLarge) {
-			double mod;
-			switch (type) {
-			case 0: 
-				mod = LAND_SPEED_MODIFIER[groundType];
-				if (isLarge) {mod *= LARGE_SPEED_MODIFIER[groundType];}
-				if (hasLargeOccupant()) {
-					mod *= LAND_SPEED_MODIFIER[0];
-					if (isLarge) {mod *= LARGE_SPEED_MODIFIER[0];}
-				}
-				return mod; 
-			case 1:
-				mod = WATER_SPEED_MODIFIER[groundType];
-				if (isLarge) {mod *= LARGE_SPEED_MODIFIER[groundType];}
-				if (hasLargeOccupant()) {
-					mod *= WATER_SPEED_MODIFIER[0];
-					if (isLarge) {mod *= LARGE_SPEED_MODIFIER[0];}
-				}
-				return mod; 
-			case 2:
-				mod = AIR_SPEED_MODIFIER[groundType];
-				if (isLarge) {mod *= LARGE_SPEED_MODIFIER[groundType];}
-				if (hasLargeOccupant()) {
-					mod *= AIR_SPEED_MODIFIER[0];
-					if (isLarge) {mod *= LARGE_SPEED_MODIFIER[0];}
-				}
-				return mod; 
+			double mod = 0.0;
+			mod = speedModifiers[type + 1];
+			if (isLarge) mod *= largeSpeedModifiers[type + 1];
+			if (hasLargeOccupant()) {
+				mod *= speedModifiers[0];
+				if (isLarge) mod *= largeSpeedModifiers[0];
 			}
-			return 0.0;
+			return mod;
 		}
 	}
 	
@@ -167,13 +155,15 @@ public class Environment {
 		environment = new Tile[ySize][xSize];
 		for (int i = 0; i < ySize; i++) {
 			for (int j = 0; j < xSize; j++) {
-				environment[i][j] = new Tile(1);
+				environment[i][j] = new Tile();
 			}
 		}
 		organisms = new OrganismList();
 		envXSize = xSize;
 		envYSize = ySize;
 		worldAge = 0;
+		
+		generateGroundTypes();
 	}
 	
 	public double getWorldAge() {
@@ -188,19 +178,45 @@ public class Environment {
 		return envYSize;
 	}
 	
-	public void generateGroundTypes() {
+	private void generateGroundTypes() {
+		double[] landMovement       = {0.50, 1.00, 0.00, 1.00};
+		double[] waterMovement      = {0.50, 0.00, 1.00, 1.00};
+		double[] largeMovement      = {0.00, 1.00, 1.00, 1.00};
+		double[] coastMovement      = {0.50, 0.34, 1.00, 1.00};
+		double[] coastLargeMovement = {0.00, 1.00, 0.00, 1.00};
+		double aquaticWaterVal = 1.0;
+		double landWaterStartingVal = 1.24;
+		Color coastColor = new Color(150,150,255);
+		Color deepWaterColor = new Color(100,100,200);
+		Color goodLandColor = new Color(165,130,60);
 		for (int i = 0; i < environment.length; i++) {
 			for (int j = 0; j < environment[i].length; j++) {
-				if (j < 15) environment[i][j].setGroundType(5);
-				if (j >= 15 && j < 20) environment[i][j].setGroundType(4);
-				if (j > 40) environment[i][j].setGroundType(2);
-				if (j > 80) environment[i][j].setGroundType(3);
+				if (j < 15) {
+					environment[i][j].setSpeedModifiers(waterMovement);
+					environment[i][j].setLargeSpeedModifiers(largeMovement);
+					environment[i][j].setWaterVal(aquaticWaterVal);
+					environment[i][j].setColor(deepWaterColor);
+				}
+				if (j >= 15 && j < 20) {
+					environment[i][j].setSpeedModifiers(coastMovement);
+					environment[i][j].setLargeSpeedModifiers(coastLargeMovement);
+					environment[i][j].setWaterVal(aquaticWaterVal);
+					environment[i][j].setColor(coastColor);
+				}
+				if (j >= 20) {
+					environment[i][j].setSpeedModifiers(landMovement);
+					environment[i][j].setLargeSpeedModifiers(largeMovement);
+					double w = Math.max(landWaterStartingVal - (0.005 * (j - 20)), 0);
+					environment[i][j].setWaterVal(w);
+					int r = Math.min((int) Math.round(goodLandColor.getRed() + (85 * (1 - w))), 255);
+					int g = Math.min((int) Math.round(goodLandColor.getGreen() + (120 * (1 - w))), 255);
+					int b = Math.min((int) Math.round(goodLandColor.getBlue() + (60 * (1 - w))), 255);
+					
+					environment[i][j].setColor(new Color(r,g,b));
+				}
 			}
 		}
-	}
-	
-	public int getGroundType(Position p) {
-		return environment[p.yPosition][p.xPosition].getGroundType();
+		
 	}
 	
 	public OrganismList getOrganisms() {
@@ -278,7 +294,6 @@ public class Environment {
 		}
 	}
 	
-	// remove method is private to avoid ConcurrentModificationException
 	private void removeOrganism(Organism o) {
 		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(findLayer(o));
 	}
@@ -288,15 +303,6 @@ public class Environment {
 	}
 	
 	public void progressTime() {
-		/*Iterator<Organism> i = organisms.iterator();
-		while (i.hasNext()) {
-			Organism o = i.next();
-			o.nextAction();
-			if (o.isMarkedForRemoval()) {
-				i.remove();
-				removeOrganism(o);
-			}
-		}*/
 		organisms.startIteration();
 		while(! organisms.endOfList()) {
 			organisms.getCurrentOrganism().nextAction();
@@ -310,7 +316,7 @@ public class Environment {
 	}
 	
 	public double getWaterValue(Position p) {
-		return WATER_VALUES[environment[p.yPosition][p.xPosition].getGroundType()];
+		return environment[p.yPosition][p.xPosition].waterValue;
 	}
 	
 	// returns a 2D array of colors for drawing
