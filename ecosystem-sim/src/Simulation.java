@@ -1,20 +1,25 @@
-import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.SwingUtilities;
+import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+
 import java.awt.Dimension;
 
 public class Simulation {
-	private static final int WINDOW_WIDTH = 500;
-	private static final int WINDOW_HEIGHT = 500;
+	private static final int WINDOW_WIDTH = 600;
+	private static final int WINDOW_HEIGHT = 600;
 	private static final int SQUARE_SIZE = 5;
+	
+	private static final int ENVIRONMENT_SIZE = 200;
 	
 	private static final int SIMULATION_TICK = 100;
 	
@@ -55,7 +60,7 @@ public class Simulation {
 	private static void createAndShowGUI() {
 		execTimes = new long[8];
 		////////Initial environment conditions////////
-		Environment.makeEnvironment(WINDOW_WIDTH / SQUARE_SIZE, WINDOW_HEIGHT / SQUARE_SIZE);
+		Environment.makeEnvironment(ENVIRONMENT_SIZE, ENVIRONMENT_SIZE);
 		Environment.getEnvironment().generateGroundTypes();
 		/*
 		for (int i = 0; i < 5; i++) {
@@ -76,6 +81,7 @@ public class Simulation {
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.add(new EnvironmentPanel(Environment.getEnvironment(), WINDOW_WIDTH, WINDOW_HEIGHT, SQUARE_SIZE));//, f));
         f.pack();
+        f.setResizable(false);
         f.setVisible(true);
         
         benchmarkTime(0);
@@ -92,11 +98,36 @@ class EnvironmentPanel extends JPanel {
 	private int windowHeight;
 	private int squareSize;
 	
+	private int screenx, screeny;
+	
 	public EnvironmentPanel(Environment e, int width, int height, int size) {//, JFrame jf) {
 		environment = e;
 		windowWidth = width;
 		windowHeight = height;
 		squareSize = size;
+		
+		screenx = screeny = 0;
+		
+		this.getInputMap().put(KeyStroke.getKeyStroke("UP"), "up");
+		this.getActionMap().put("up", new upAction());
+		
+		this.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "down");
+		this.getActionMap().put("down", new downAction());
+		
+		this.getInputMap().put(KeyStroke.getKeyStroke("LEFT"), "left");
+		this.getActionMap().put("left", new leftAction());
+		
+		this.getInputMap().put(KeyStroke.getKeyStroke("RIGHT"), "right");
+		this.getActionMap().put("right", new rightAction());
+		
+		this.getInputMap().put(KeyStroke.getKeyStroke("EQUALS"), "plus");
+		this.getActionMap().put("plus", new plusAction());
+		
+		this.getInputMap().put(KeyStroke.getKeyStroke("MINUS"), "minus");
+		this.getActionMap().put("minus", new minusAction());
+		
+		this.getInputMap().put(KeyStroke.getKeyStroke("SPACE"), "space");
+		this.getActionMap().put("space", new spaceAction());
 		
 		/*
 		addMouseListener(new MouseAdapter() {
@@ -106,6 +137,56 @@ class EnvironmentPanel extends JPanel {
             }
         });*/
         
+	}
+	
+	class upAction extends AbstractAction {
+
+		public void actionPerformed(ActionEvent e) {
+			screeny++;
+		}
+	}
+	
+	class downAction extends AbstractAction {
+
+		public void actionPerformed(ActionEvent e) {
+			screeny--;
+		}
+	}
+	
+	class leftAction extends AbstractAction {
+
+		public void actionPerformed(ActionEvent e) {
+			screenx++;
+		}
+	}
+	
+	class rightAction extends AbstractAction {
+
+		public void actionPerformed(ActionEvent e) {
+			screenx--;
+		}
+	}
+	
+	class plusAction extends AbstractAction {
+
+		public void actionPerformed(ActionEvent e) {
+			squareSize = Math.min(windowHeight / 10, squareSize + 1);
+		}
+	}
+	
+	class minusAction extends AbstractAction {
+
+		public void actionPerformed(ActionEvent e) {
+			squareSize = Math.max(1, squareSize - 1);
+		}
+	}
+	
+	class spaceAction extends AbstractAction {
+
+		public void actionPerformed(ActionEvent e) {
+			screenx = 0;
+			screeny = 0;
+		}
 	}
 	
 	public Dimension getPreferredSize() {
@@ -120,7 +201,7 @@ class EnvironmentPanel extends JPanel {
 		for (int i = 0; i < colorArray.length; i++) {
 			for (int j = 0; j < colorArray[i].length; j++) {
 				g.setColor(colorArray[i][j]);
-				g.fillRect(j * squareSize, i * squareSize, squareSize, squareSize);
+				g.fillRect((j + screenx) * squareSize, (i + screeny) * squareSize, squareSize, squareSize);
 			}
 		}
 	}
