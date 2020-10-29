@@ -23,7 +23,7 @@ public class Simulation {
 	private static final int WINDOW_HEIGHT = 600;
 	private static final int SQUARE_SIZE = 5;
 	
-	private static final int ENVIRONMENT_SIZE = 200;
+	private static final int ENVIRONMENT_SIZE = 300;
 	
 	private static final int SIMULATION_TICK = 100;
 	
@@ -66,16 +66,16 @@ public class Simulation {
 		////////Initial environment conditions////////
 		Environment.makeEnvironment(ENVIRONMENT_SIZE, ENVIRONMENT_SIZE);
 		
-		/*for (int i = 0; i < 2000; i++) {
+		/*for (int i = 0; i < 1; i++) {
 			while (! Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}
-		for (int i = 0; i < 1; i++) {
+		/*for (int i = 0; i < 1; i++) {
 			while (! Environment.getEnvironment().addOrganism(new Organism(3), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}*/
-		for (int i = 0; i < 40; i++) {
+		for (int i = 0; i < 10; i++) {
 			while (! Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 5; i++) {
 			while (! Environment.getEnvironment().addOrganism(new Organism(4), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}
 		/////End of initial environment conditions///// 
@@ -214,12 +214,12 @@ class RepaintTask extends TimerTask {
 	public void run() {
 		Environment.getEnvironment().progressTime();
 		if (Environment.getEnvironment().getWorldAge() % 1 == 0) System.out.println(Environment.getEnvironment().getWorldAge());
-		if (Environment.getEnvironment().getWorldAge() == 30) {
+		if (Environment.getEnvironment().getWorldAge() == 20) {
 			for (int i = 0; i < 5; i++) {
 				while (! Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 			}
 		}
-		if (Environment.getEnvironment().getWorldAge() == 40) {
+		if (Environment.getEnvironment().getWorldAge() == 30) {
 			for (int i = 0; i < 1; i++) {
 				while (! Environment.getEnvironment().addOrganism(new Organism(3), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 			}		
@@ -227,7 +227,7 @@ class RepaintTask extends TimerTask {
 		Simulation.benchmarkTime(0);
 		jf.repaint();
 		Simulation.benchmarkTime(7);
-		if (Environment.getEnvironment().getWorldAge() == 60) {
+		if (Environment.getEnvironment().getWorldAge() == 50) {
 			Simulation.printTimes();
 		}
 	}

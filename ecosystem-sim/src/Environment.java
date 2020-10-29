@@ -298,8 +298,66 @@ public class Environment {
 		environment[o.getPosition().yPosition][o.getPosition().xPosition].removeOccupant(findLayer(o));
 	}
 	
-	public OrganismList resolvePerception(Organism o) {
-		return organisms.copy();
+	public Organism resolvePerception(Organism o) {
+		int distance = 200;
+		int minDistance = 5;
+		Organism target = null;
+		
+		switch (o.getCurrentBehavior()) {
+		case 1:
+			
+			double t, x, y, favoredDirection;
+			
+			favoredDirection = Math.random();
+			Position pos;
+			for (int i = 1; i <= distance; i++) {
+				for (int j = 0; j < i * 4; j++) {
+					t = 2 * Math.PI * ((j / (i * 4.0)) + favoredDirection);
+					x = i * Math.cos(t);
+					y = i * Math.sin(t);
+					pos = new Position((int) Math.round(x + o.getPosition().xPosition), (int) Math.round(y + o.getPosition().yPosition));
+					
+					if (!(pos.xPosition < 0 || pos.xPosition >= envXSize || pos.yPosition < 0 || pos.yPosition >= envYSize)) {
+						for (int k = 0; k < environment[pos.yPosition][pos.xPosition].layers.length; k++) {
+							if (environment[pos.yPosition][pos.xPosition].layers[k] != null) {
+								if (o.getPreyValues().isPrey(environment[pos.yPosition][pos.xPosition].layers[k].getOrganismType())) {
+									if (canReach(o, environment[pos.yPosition][pos.xPosition].layers[k].getPosition())) {
+										/* 
+										 * If the organism is starving, it will immediately choose the first available target
+										 * 
+										 * If not, the organism will only switch targets under the following circumstances:
+										 * New target is no more than double the distance away from the old target (unless it is less than the minimum distance), and either
+										 * New target is more valuable, or current target is not a corpse and new target is a corpse
+										 */
+										
+										if (o.isStarving()) {
+											return environment[pos.yPosition][pos.xPosition].layers[k];
+										}
+										
+										if (target == null) {
+											target = environment[pos.yPosition][pos.xPosition].layers[k];
+											distance = Math.max(Math.min(distance, i * 2), minDistance);
+										}
+										else {
+											if (o.getPreyValues().getPreyValue(target.getOrganismType()) < o.getPreyValues().getPreyValue(environment[pos.yPosition][pos.xPosition].layers[k].getOrganismType()) || (! target.isACorpse() && environment[pos.yPosition][pos.xPosition].layers[k].isACorpse())) {
+												target = environment[pos.yPosition][pos.xPosition].layers[k];
+												distance = Math.max(Math.min(distance, i * 2), minDistance);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			break;
+		case 2:
+			break;
+		default: target = null;
+		}
+		
+		return target;
 	}
 	
 	public void progressTime() {

@@ -3,10 +3,6 @@ import java.util.ArrayList;
 
 public class Organism {
 	
-	// organisms will only update their target at intervals
-	// higher values improve simulation performance at the cost of organism AI performance
-	private static final int PERCEPTION_CHECK_INTERVAL = 5;
-	
 	private Position position;
 	// 0 = land movement, 1 = water movement, 2 = air movement (see Environment class)
 	// plants are incapable of movement; having a movement speed represents the ability to grow
@@ -17,7 +13,6 @@ public class Organism {
 	
 	// the target of AI behaviors such as eating
 	private Organism target;
-	private int checkPerceptionValue;
 	
 	private int organismType;
 	private int foodChainIdentifier;	// 0 = plant, 1 = herbivore, 2 = omnivore, 3 = carnivore
@@ -61,7 +56,6 @@ public class Organism {
 	
 	// New organisms are created from parent(s) parameters (genes)
 	public Organism(Organism parent) {
-		checkPerceptionValue = 0;
 		position = new Position(0,0);
 		walkingSpeeds = parent.walkingSpeeds;
 		organismType = parent.organismType;
@@ -88,7 +82,6 @@ public class Organism {
 	
 	// Creates a new organism from nothing of the specified type
 	public Organism(int type) {
-		checkPerceptionValue = 0;
 		position = new Position(0,0);
 		age = 0;
 		currentBehavior = 0;
@@ -147,7 +140,7 @@ public class Organism {
 			maxAge = 20;
 			maxhpThreshold = 300;
 			
-			preyValues.addPreyValue(0, 2.0f);
+			preyValues.addPreyValue(0, 2.3f);
 			
 			upkeep = 10;
 			maxOffspring = 5;
@@ -168,7 +161,7 @@ public class Organism {
 			maxAge = 4;
 			maxhpThreshold = 20;
 			
-			preyValues.addPreyValue(0, 1.0f);
+			preyValues.addPreyValue(0, 0.7f);
 			
 			upkeep = 0.3;
 			maxOffspring = 3;
@@ -228,12 +221,24 @@ public class Organism {
 		return foodChainIdentifier;
 	}
 	
+	public PreyValues getPreyValues() {
+		return preyValues;
+	}
+	
+	public boolean isStarving() {
+		return nutrition <= upkeep * 5;
+	}
+	
 	public boolean isACorpse() {
 		return isACorpse;
 	}
 	
 	public boolean isLarge() {
 		return isLarge;
+	}
+	
+	public int getCurrentBehavior() {
+		return currentBehavior;
 	}
 	
 	public boolean isMarkedForRemoval() {
@@ -489,55 +494,14 @@ public class Organism {
 	private void perceive() {
 		if (foodChainIdentifier == 0) return;
 		
-		checkPerceptionValue++;
-		if (target != null && checkPerceptionValue % PERCEPTION_CHECK_INTERVAL != 0) {
+		if (currentBehavior == 0) {
+			target = null;
 			return;
 		}
 		
-		OrganismList mentalMap = Environment.getEnvironment().resolvePerception(this);
+		if (target != null && ! target.isMarkedForRemoval) return;
 		
-		target = null;
-		switch (currentBehavior) {
-		case 1:
-			mentalMap.startIteration();
-			while (! mentalMap.endOfList()) {
-				if (preyValues.isPrey(mentalMap.getCurrentOrganism().getOrganismType())) {
-					if (Environment.getEnvironment().canReach(this, mentalMap.getCurrentOrganism().position)) {
-						if (target == null) target = mentalMap.getCurrentOrganism();
-						else {
-							// if any target is found adjacent to this organism, choose it and stop looking
-							if (position.isWithinRange(mentalMap.getCurrentOrganism().position, 1)) {
-								target = mentalMap.getCurrentOrganism();
-								break;
-							}
-							/*
-							 * Organism will switch targets only under the following circumstances:
-							 * Organism is starving and new target is closer
-							 * Organism is not starving and new target is more valuable
-							 * Organism is not starving, new target is equally valuable, and new target is closer
-							 * 
-							 * Additionally, carnivores/omnivores will prioritize corpses over live prey unless they're starving
-							 */
-							boolean c = position.closerThan(mentalMap.getCurrentOrganism().position, target.position);
-							boolean ev = preyValues.getPreyValue(target.getOrganismType()) == preyValues.getPreyValue(mentalMap.getCurrentOrganism().getOrganismType());
-							boolean v = preyValues.getPreyValue(target.getOrganismType()) < preyValues.getPreyValue(mentalMap.getCurrentOrganism().getOrganismType());
-							boolean s = nutrition <= upkeep * 5;
-	
-							if ((c && s) || (!s && (v || (ev && c)))) {
-								if (! target.isACorpse || mentalMap.getCurrentOrganism().isACorpse || s) {
-									target = mentalMap.getCurrentOrganism();
-								}
-							}
-						}
-					}
-				}
-				mentalMap.next();
-			}
-			break;
-		case 2:
-			break;
-		default:
-		}
+		target = Environment.getEnvironment().resolvePerception(this);
 	}
 	
 	// subtracts energy spent from nutrition value
