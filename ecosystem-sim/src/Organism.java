@@ -5,7 +5,7 @@ public class Organism {
 	
 	// organisms will only update their target at intervals
 	// higher values improve simulation performance at the cost of organism AI performance
-	private static final int PERCEPTION_CHECK_INTERVAL = 2;
+	private static final int PERCEPTION_CHECK_INTERVAL = 5;
 	
 	private Position position;
 	// 0 = land movement, 1 = water movement, 2 = air movement (see Environment class)
@@ -108,10 +108,10 @@ public class Organism {
 			maxAge = 10;
 			maxhpThreshold = 200;
 			
-			preyValues.addPreyValue(1, 2.2f);
-			preyValues.addPreyValue(4, 1.8f);
+			preyValues.addPreyValue(1, 2.5f);
+			preyValues.addPreyValue(4, 2.0f);
 			
-			upkeep = 4;
+			upkeep = 3;
 			maxOffspring = 3;
 			litterSize = 1;
 			
@@ -128,9 +128,9 @@ public class Organism {
 			maxAge = 10;
 			maxhpThreshold = 200;
 			
-			preyValues.addPreyValue(2, 5.0f);
+			preyValues.addPreyValue(2, 6.0f);
 			
-			upkeep = 4;
+			upkeep = 3;
 			maxOffspring = 2;
 			litterSize = 2;
 			
@@ -150,7 +150,7 @@ public class Organism {
 			preyValues.addPreyValue(0, 2.0f);
 			
 			upkeep = 10;
-			maxOffspring = 10;
+			maxOffspring = 5;
 			litterSize = 1;
 			
 			isLarge = true;
@@ -165,13 +165,13 @@ public class Organism {
 			organismType = type;
 			foodChainIdentifier = 0;
 			color = new Color(0,200,0);
-			maxAge = 5;
-			maxhpThreshold = 50;
+			maxAge = 4;
+			maxhpThreshold = 20;
 			
 			preyValues.addPreyValue(0, 1.0f);
 			
-			upkeep = 2;
-			maxOffspring = 10;
+			upkeep = 0.3;
+			maxOffspring = 3;
 			litterSize = 1;
 			
 			attackPower = 1;
@@ -444,7 +444,7 @@ public class Organism {
 				for (int i = 0; i < litterSize; i++) {
 					Organism offspring = new Organism(this);
 					
-					Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(3));
+					Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(5));
 				}
 				numberOfOffspring += litterSize;
 				expendEnergy(reproductionCost);
@@ -485,12 +485,12 @@ public class Organism {
 		nutrition += Math.max(0, (maxhpThreshold / maxhp) * ((hp / 20.0) + (hp  * 3.0 / 20.0) * (preyValues.getPreyValue(0) * Environment.getEnvironment().getWaterValue(this.position) + (1 - preyValues.getPreyValue(0)))));
 	}
 	
-	// updates the mental map of the organism
+	// updates the target of the organism's behavior, if any
 	private void perceive() {
 		if (foodChainIdentifier == 0) return;
 		
 		checkPerceptionValue++;
-		if (checkPerceptionValue % PERCEPTION_CHECK_INTERVAL != 0) {
+		if (target != null && checkPerceptionValue % PERCEPTION_CHECK_INTERVAL != 0) {
 			return;
 		}
 		
@@ -501,11 +501,11 @@ public class Organism {
 		case 1:
 			mentalMap.startIteration();
 			while (! mentalMap.endOfList()) {
-				if (Environment.getEnvironment().canReach(this, mentalMap.getCurrentOrganism().position)) {
-					if (preyValues.isPrey(mentalMap.getCurrentOrganism().getOrganismType())) {
+				if (preyValues.isPrey(mentalMap.getCurrentOrganism().getOrganismType())) {
+					if (Environment.getEnvironment().canReach(this, mentalMap.getCurrentOrganism().position)) {
 						if (target == null) target = mentalMap.getCurrentOrganism();
 						else {
-							// if any target is found immediately next to this organism, choose it and stop looking
+							// if any target is found adjacent to this organism, choose it and stop looking
 							if (position.isWithinRange(mentalMap.getCurrentOrganism().position, 1)) {
 								target = mentalMap.getCurrentOrganism();
 								break;

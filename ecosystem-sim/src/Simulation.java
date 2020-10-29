@@ -65,17 +65,17 @@ public class Simulation {
 		execTimes = new long[8];
 		////////Initial environment conditions////////
 		Environment.makeEnvironment(ENVIRONMENT_SIZE, ENVIRONMENT_SIZE);
-		/*
-		for (int i = 0; i < 5; i++) {
+		
+		/*for (int i = 0; i < 2000; i++) {
 			while (! Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}
 		for (int i = 0; i < 1; i++) {
 			while (! Environment.getEnvironment().addOrganism(new Organism(3), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}*/
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 40; i++) {
 			while (! Environment.getEnvironment().addOrganism(new Organism(1), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 10; i++) {
 			while (! Environment.getEnvironment().addOrganism(new Organism(4), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}
 		/////End of initial environment conditions///// 
@@ -143,49 +143,42 @@ class EnvironmentPanel extends JPanel {
 	}
 	
 	class upAction extends AbstractAction {
-
 		public void actionPerformed(ActionEvent e) {
 			screeny++;
 		}
 	}
 	
 	class downAction extends AbstractAction {
-
 		public void actionPerformed(ActionEvent e) {
 			screeny--;
 		}
 	}
 	
 	class leftAction extends AbstractAction {
-
 		public void actionPerformed(ActionEvent e) {
 			screenx++;
 		}
 	}
 	
 	class rightAction extends AbstractAction {
-
 		public void actionPerformed(ActionEvent e) {
 			screenx--;
 		}
 	}
 	
 	class plusAction extends AbstractAction {
-
 		public void actionPerformed(ActionEvent e) {
 			squareSize = Math.min(windowHeight / 10, squareSize + 1);
 		}
 	}
 	
 	class minusAction extends AbstractAction {
-
 		public void actionPerformed(ActionEvent e) {
 			squareSize = Math.max(1, squareSize - 1);
 		}
 	}
 	
 	class spaceAction extends AbstractAction {
-
 		public void actionPerformed(ActionEvent e) {
 			screenx = 0;
 			screeny = 0;
@@ -221,12 +214,12 @@ class RepaintTask extends TimerTask {
 	public void run() {
 		Environment.getEnvironment().progressTime();
 		if (Environment.getEnvironment().getWorldAge() % 1 == 0) System.out.println(Environment.getEnvironment().getWorldAge());
-		if (Environment.getEnvironment().getWorldAge() == 20) {
+		if (Environment.getEnvironment().getWorldAge() == 30) {
 			for (int i = 0; i < 5; i++) {
 				while (! Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 			}
 		}
-		if (Environment.getEnvironment().getWorldAge() == 30) {
+		if (Environment.getEnvironment().getWorldAge() == 40) {
 			for (int i = 0; i < 1; i++) {
 				while (! Environment.getEnvironment().addOrganism(new Organism(3), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 			}		
@@ -234,7 +227,7 @@ class RepaintTask extends TimerTask {
 		Simulation.benchmarkTime(0);
 		jf.repaint();
 		Simulation.benchmarkTime(7);
-		if (Environment.getEnvironment().getWorldAge() == 50) {
+		if (Environment.getEnvironment().getWorldAge() == 60) {
 			Simulation.printTimes();
 		}
 	}
