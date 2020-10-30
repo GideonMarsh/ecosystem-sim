@@ -25,7 +25,7 @@ public class Simulation {
 	
 	private static final int ENVIRONMENT_SIZE = 300;
 	
-	private static final int SIMULATION_TICK = 100;
+	private static final int SIMULATION_TICK = 10;
 	
 	public static long[] execTimes;
 	public static long lastTime;
@@ -214,12 +214,12 @@ class RepaintTask extends TimerTask {
 	public void run() {
 		Environment.getEnvironment().progressTime();
 		if (Environment.getEnvironment().getWorldAge() % 1 == 0) System.out.println(Environment.getEnvironment().getWorldAge());
-		if (Environment.getEnvironment().getWorldAge() == 20) {
-			for (int i = 0; i < 5; i++) {
+		if (Environment.getEnvironment().getWorldAge() == 40) {
+			for (int i = 0; i < 1; i++) {
 				while (! Environment.getEnvironment().addOrganism(new Organism(2), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 			}
 		}
-		if (Environment.getEnvironment().getWorldAge() == 30) {
+		if (Environment.getEnvironment().getWorldAge() == 50) {
 			for (int i = 0; i < 1; i++) {
 				while (! Environment.getEnvironment().addOrganism(new Organism(3), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 			}		
@@ -227,7 +227,7 @@ class RepaintTask extends TimerTask {
 		Simulation.benchmarkTime(0);
 		jf.repaint();
 		Simulation.benchmarkTime(7);
-		if (Environment.getEnvironment().getWorldAge() == 50) {
+		if (Environment.getEnvironment().getWorldAge() == 60) {
 			Simulation.printTimes();
 		}
 	}

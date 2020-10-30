@@ -101,10 +101,10 @@ public class Organism {
 			maxAge = 10;
 			maxhpThreshold = 200;
 			
-			preyValues.addPreyValue(1, 2.5f);
-			preyValues.addPreyValue(4, 2.0f);
+			preyValues.addPreyValue(1, 3.0f);
+			preyValues.addPreyValue(4, 1.0f);
 			
-			upkeep = 3;
+			upkeep = 2;
 			maxOffspring = 3;
 			litterSize = 1;
 			
@@ -123,7 +123,7 @@ public class Organism {
 			
 			preyValues.addPreyValue(2, 6.0f);
 			
-			upkeep = 3;
+			upkeep = 2;
 			maxOffspring = 2;
 			litterSize = 2;
 			
@@ -137,13 +137,13 @@ public class Organism {
 			organismType = type;
 			foodChainIdentifier = 0;
 			color = new Color(0,120,0);
-			maxAge = 20;
+			maxAge = 22;
 			maxhpThreshold = 300;
 			
 			preyValues.addPreyValue(0, 2.3f);
 			
-			upkeep = 10;
-			maxOffspring = 5;
+			upkeep = 12;
+			maxOffspring = 2;
 			litterSize = 1;
 			
 			isLarge = true;
@@ -158,13 +158,13 @@ public class Organism {
 			organismType = type;
 			foodChainIdentifier = 0;
 			color = new Color(0,200,0);
-			maxAge = 4;
-			maxhpThreshold = 20;
+			maxAge = 6;
+			maxhpThreshold = 10;
 			
 			preyValues.addPreyValue(0, 0.7f);
 			
 			upkeep = 0.3;
-			maxOffspring = 3;
+			maxOffspring = 0;
 			litterSize = 1;
 			
 			attackPower = 1;
@@ -173,7 +173,7 @@ public class Organism {
 		hp = maxhp;
 		hungryValue = (int) Math.round(upkeep * 50);
 		nutrition = hungryValue * 1.5;
-		reproductionCost = (int) Math.round((100 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
+		reproductionCost = (int) Math.round((300 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
 		reproductionThreshold = reproductionCost + hungryValue;
 	}
 	
@@ -392,6 +392,10 @@ public class Organism {
 	
 	private void die() {
 		if (foodChainIdentifier == 0 || isACorpse) {
+			// plants will reproduce right before death
+			if (foodChainIdentifier == 0) {
+				reproduce();
+			}
 			isMarkedForRemoval = true;
 		}
 		else {
@@ -445,17 +449,16 @@ public class Organism {
 			 * Each additional litter costs 1.5 times the previous one
 			 */
 			double currentCost = 1.0;
-			do {
+			while (nutrition >= reproductionThreshold * currentCost){
 				for (int i = 0; i < litterSize; i++) {
 					Organism offspring = new Organism(this);
 					
-					Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(5));
+					Environment.getEnvironment().addOrganism(offspring, position.randomWithinDistance(20));
 				}
 				numberOfOffspring += litterSize;
 				expendEnergy(reproductionCost);
 				currentCost += 0.5;
-				}
-			while (nutrition >= reproductionThreshold * currentCost);
+			}
 		}
 		else {
 			/*
@@ -483,7 +486,7 @@ public class Organism {
 	}
 	
 	private void eat(Organism prey) {
-		nutrition += prey.takeHP(maxhpThreshold / 5) * preyValues.getPreyValue(prey.getOrganismType());
+		nutrition += 2 * prey.takeHP(maxhpThreshold / 5) * preyValues.getPreyValue(prey.getOrganismType());
 	}
 	
 	private void photosynthesize() {
