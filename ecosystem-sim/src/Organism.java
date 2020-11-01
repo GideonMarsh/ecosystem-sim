@@ -78,6 +78,7 @@ public class Organism {
 		reproductionCost = (int) Math.round((100 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
 		reproductionThreshold = reproductionCost + hungryValue;
 		isLarge = parent.isLarge;
+		evolve();
 	}
 	
 	// Creates a new organism from nothing of the specified type
@@ -272,9 +273,7 @@ public class Organism {
 	// The AI that determines and executes Organism behavior
 	// Behavior is split up among helper methods
 	public void nextAction() {
-        Simulation.benchmarkTime(0);
 		growOlder();
-        Simulation.benchmarkTime(1);
 		if (! isACorpse) {
 			
 			// decide what current behavior of organism should be
@@ -302,12 +301,12 @@ public class Organism {
 					currentBehavior = 0;
 				}
 			}
-			Simulation.benchmarkTime(2);
 			// perform actions according to current behavior
+			long c = System.currentTimeMillis();
 			perceive();
-			Simulation.benchmarkTime(3);
+			long d = System.currentTimeMillis() - c;
+			if (d > 1) System.out.println(d);
 			move();
-			Simulation.benchmarkTime(4);
 			if (foodChainIdentifier == 0) photosynthesize();
 			else {
 				if (currentBehavior == 1 && target != null && position.isWithinRange(target.position, 1)) {
@@ -319,11 +318,9 @@ public class Organism {
 					}
 				}
 			}
-			Simulation.benchmarkTime(5);
 			if (currentBehavior == 2) {
 				reproduce();
 			}
-			Simulation.benchmarkTime(6);
 		}
 	}
 	
@@ -521,5 +518,82 @@ public class Organism {
 			return true;
 		}
 		return false;
+	}
+	
+	/*
+	 * Evolution occurs slowly over time between generations
+	 * The evolution method is called during organism creation (occurring during reproduction)
+	 * It will choose one aspect of the organism to modify slightly (mutation), or choose none
+	 * The method returns true if a value was modified, and false if no mutation took place
+	 * Natural selection should naturally determine which organisms survive
+	 * 
+	 * Each evolution that is considered "beneficial" increases the organism's upkeep cost
+	 */
+	private boolean evolve() {
+		int preyType;
+		float formerVal;
+		int choice = (int) Math.round(Math.random() * 300);
+		switch (choice) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+			maxAge++;
+			upkeep *= 1.05;
+			break;
+		case 5:
+		case 6:
+		case 7:
+		case 8:
+		case 9:
+			if (maxAge == 1) return false;
+			maxAge--;
+			upkeep /= 1.05;
+			break;
+		case 10:
+		case 11:
+			maxhpThreshold += 5;
+			upkeep *= 1.01;
+			if (maxhpThreshold >= 250) isLarge = true;
+			break;
+		case 12:
+		case 13:
+			if (maxhpThreshold <= 5) return false;
+			maxhpThreshold -= 5;
+			upkeep /= 1.01;
+			if (maxhpThreshold < 250) isLarge = false;
+			break;
+		case 14:
+		case 15:
+		case 16:
+			maxOffspring++;
+			upkeep *= 1.2;
+			break;
+		case 17:
+		case 18:
+		case 19:
+			if (maxOffspring == 0) return false;
+			maxOffspring--;
+			upkeep /= 1.2;
+			break;
+		case 20:
+		case 21:
+			preyType = 0;
+			formerVal = preyValues.getPreyValue(preyType);
+			preyValues.modifyPreyValue(preyType, formerVal + 0.1f);
+			upkeep = formerVal < 1 ? upkeep / 1.22 : upkeep * 1.22;
+			break;
+		case 22:
+		case 23:
+			preyType = 0;
+			formerVal = preyValues.getPreyValue(preyType);
+			if (formerVal == 0) return false;
+			preyValues.modifyPreyValue(preyType, formerVal - 0.1f);
+			upkeep = formerVal > 1 ? upkeep / 1.22 : upkeep * 1.22;
+			break;
+		default: return false;
+		}
+		return true;
 	}
 }
