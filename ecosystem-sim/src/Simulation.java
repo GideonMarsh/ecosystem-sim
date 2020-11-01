@@ -3,6 +3,8 @@ import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -53,13 +55,24 @@ public class Simulation {
 			while (! Environment.getEnvironment().addOrganism(new Organism(4), new Position((int) Math.round(Math.random() * (Environment.getEnvironment().getWorldWidth() - 1)),(int) Math.round(Math.random() * (Environment.getEnvironment().getWorldHeight() - 1)))));
 		}
 		/////End of initial environment conditions///// 
-		
 		JFrame f = new JFrame("Ecosystem");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.add(new EnvironmentPanel(Environment.getEnvironment(), WINDOW_WIDTH, WINDOW_HEIGHT, SQUARE_SIZE));//, f));
         f.pack();
         f.setResizable(false);
         f.setVisible(true);
+        f.addWindowListener(new WindowListener() {
+			public void windowOpened(WindowEvent e) {}
+			public void windowIconified(WindowEvent e) {}
+			public void windowDeiconified(WindowEvent e) {}
+			public void windowActivated(WindowEvent e) {}
+			public void windowDeactivated(WindowEvent e) {}
+			public void windowClosed(WindowEvent e) {}
+			
+			public void windowClosing(WindowEvent e) {
+				System.out.println("Simulation ended");
+			}
+        });
         
         RepaintTask rt = new RepaintTask(f);
         Timer t = new Timer();
