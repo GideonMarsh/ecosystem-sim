@@ -73,12 +73,12 @@ public class Organism {
 		maxOffspring = parent.maxOffspring;
 		litterSize = parent.litterSize;
 		numberOfOffspring = 0;
-		nutrition = hungryValue * (Math.random() + 0.5);
+		nutrition = hungryValue / 10.0;
 		attackPower = parent.attackPower;
 		reproductionCost = (int) Math.round((100 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
 		reproductionThreshold = reproductionCost + hungryValue;
 		isLarge = parent.isLarge;
-		evolve();
+		//evolve();
 	}
 	
 	// Creates a new organism from nothing of the specified type
@@ -93,6 +93,7 @@ public class Organism {
 
 		switch (type) {
 		case 2:
+			// Herbivore
 			walkingSpeeds[0] = 1;
 			walkingSpeeds[1] = 0;
 			walkingSpeeds[2] = 0;
@@ -113,6 +114,7 @@ public class Organism {
 			break;
 		
 		case 3:
+			// Carnivore
 			walkingSpeeds[0] = 1;
 			walkingSpeeds[1] = 0;
 			walkingSpeeds[2] = 0;
@@ -132,6 +134,7 @@ public class Organism {
 			break;
 		
 		case 4:
+			// Tree
 			walkingSpeeds[0] = 1;
 			walkingSpeeds[1] = 0;
 			walkingSpeeds[2] = 0;
@@ -139,7 +142,7 @@ public class Organism {
 			foodChainIdentifier = 0;
 			color = new Color(0,120,0);
 			maxAge = 22;
-			maxhpThreshold = 300;
+			maxhpThreshold = 200;
 			
 			preyValues.addPreyValue(0, 2.3f);
 			
@@ -153,6 +156,7 @@ public class Organism {
 			
 		case 1:
 		default:
+			// Grass
 			walkingSpeeds[0] = 1;
 			walkingSpeeds[1] = 0;
 			walkingSpeeds[2] = 0;
@@ -173,7 +177,7 @@ public class Organism {
 		maxhp = maxhpThreshold / 2;
 		hp = maxhp;
 		hungryValue = (int) Math.round(upkeep * 50);
-		nutrition = hungryValue * 1.5;
+		nutrition = hungryValue * 2.0;
 		reproductionCost = (int) Math.round((300 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
 		reproductionThreshold = reproductionCost + hungryValue;
 	}
@@ -302,10 +306,7 @@ public class Organism {
 				}
 			}
 			// perform actions according to current behavior
-			long c = System.currentTimeMillis();
 			perceive();
-			long d = System.currentTimeMillis() - c;
-			if (d > 1) System.out.println(d);
 			move();
 			if (foodChainIdentifier == 0) photosynthesize();
 			else {
