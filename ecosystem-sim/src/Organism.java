@@ -75,7 +75,7 @@ public class Organism {
 		numberOfOffspring = 0;
 		nutrition = hungryValue / 10.0;
 		attackPower = parent.attackPower;
-		reproductionCost = (int) Math.round((100 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
+		reproductionCost = (int) Math.round((200 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
 		reproductionThreshold = reproductionCost + hungryValue;
 		isLarge = parent.isLarge;
 		//evolve();
@@ -168,7 +168,7 @@ public class Organism {
 			
 			preyValues.addPreyValue(0, 0.7f);
 			
-			upkeep = 0.3;
+			upkeep = 0.27;
 			maxOffspring = 0;
 			litterSize = 1;
 			
@@ -178,7 +178,7 @@ public class Organism {
 		hp = maxhp;
 		hungryValue = (int) Math.round(upkeep * 50);
 		nutrition = hungryValue * 2.0;
-		reproductionCost = (int) Math.round((300 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
+		reproductionCost = (int) Math.round((200 * upkeep) * litterSize * Math.pow(0.9, litterSize - 1));
 		reproductionThreshold = reproductionCost + hungryValue;
 	}
 	
